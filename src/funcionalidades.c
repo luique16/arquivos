@@ -11,6 +11,35 @@
 
 #include <stdio.h>
 
+/**
+ * @brief Imprime os dados de um registro.
+ *
+ * Utilizada internamente pelas funcionalidades.
+ */
+void imprimirRegistro(RegistroDados *reg) {
+    /* Dados não nulos */
+    printf("%d %s %d %s"
+           , reg->codEstacao
+           , reg->nomeEstacao
+           , reg->codLinha
+           , reg->nomeLinha);
+
+    /* Dados talvez nulos */
+    if (reg->codProxEstacao != INTEIRO_NULO) {
+        printf(" %d %d", reg->codProxEstacao, reg->distProxEstacao);
+    } else {
+        printf(" NULO NULO");
+    }
+
+    if (reg->codLinhaIntegra != INTEIRO_NULO) {
+        printf(" %d %d", reg->codLinhaIntegra, reg->codEstIntegra);
+    } else {
+        printf(" NULO NULO");
+    }
+
+    printf("\n");
+}
+
 void funcionalidade1() {
     char nomeCSV[256];
     char nomeArquivo[256];
@@ -120,4 +149,44 @@ void funcionalidade1() {
     fclose(csv);
 
     BinarioNaTela(nomeArquivo); /* exibe binário após fechar */
+}
+
+void funcionalidade2() {
+    char nomeArquivo[256];
+
+    scanf("%s", nomeArquivo);
+
+    FILE *bin = abrirArquivoBin(nomeArquivo, "rb");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    CabecalhoArquivo cabecalho;
+    lerCabecalho(bin, &cabecalho);
+
+    if (cabecalho.status == STATUS_INCONSISTENTE) {
+        fclose(bin);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    int encontrou = 0;
+
+    /* Percorre todos os RRNs sequencialmente */
+    for (int rrn = 0; rrn < cabecalho.proxRRN; rrn++) {
+        RegistroDados reg;
+        lerRegistro(bin, &reg, rrn);
+
+        if (reg.removido == REGISTRO_ATIVO) {
+            imprimirRegistro(&reg);
+            encontrou = 1;
+        }
+    }
+
+    if (!encontrou) {
+        printf("Registro inexistente.\n");
+    }
+
+    fclose(bin);
 }
