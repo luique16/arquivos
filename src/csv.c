@@ -4,6 +4,7 @@
  */
 
 #include "../include/csv.h"
+#include <stdio.h>
 
 /**
  * @brief Lê um campo do CSV até encontrar vírgula, newline ou EOF.
@@ -36,8 +37,13 @@ int lerCampoCSV(FILE *fp, char *destino, int tamanho) {
  * @return Valor inteiro ou NULO_INTEIRO se vazio.
  */
 int campoParaInteiro(char *campo) {
-    if (campo[0] == '\0') return INTEIRO_NULO;
-    return atoi(campo);
+    int inteiro = atoi(campo);
+
+    if (inteiro == 0 && campo[0] != '0') {
+        return INTEIRO_NULO;
+    }
+
+    return inteiro;
 }
 
 int lerRegistroCSV(FILE *csv, RegistroDados *reg) {
