@@ -8,37 +8,9 @@
 #include "../include/definicoes.h"
 #include "../include/csv.h"
 #include "../include/fornecidas.h"
+#include "../include/uteis.h"
 
 #include <stdio.h>
-
-/**
- * @brief Imprime os dados de um registro.
- *
- * Utilizada internamente pelas funcionalidades.
- */
-void imprimirRegistro(RegistroDados *reg) {
-    /* Dados não nulos */
-    printf("%d %s %d %s"
-           , reg->codEstacao
-           , reg->nomeEstacao
-           , reg->codLinha
-           , reg->nomeLinha);
-
-    /* Dados talvez nulos */
-    if (reg->codProxEstacao != INTEIRO_NULO) {
-        printf(" %d %d", reg->codProxEstacao, reg->distProxEstacao);
-    } else {
-        printf(" NULO NULO");
-    }
-
-    if (reg->codLinhaIntegra != INTEIRO_NULO) {
-        printf(" %d %d", reg->codLinhaIntegra, reg->codEstIntegra);
-    } else {
-        printf(" NULO NULO");
-    }
-
-    printf("\n");
-}
 
 void funcionalidade1() {
     char nomeCSV[256];
@@ -143,6 +115,16 @@ void funcionalidade1() {
         cabecalho.nroParesEstacao++;
     }
 
+    /* Limpeza de memória */
+    for (int i = 0; i < contagem; i++) {
+        if (nomesEstacoes[i] != NULL) {
+            free(nomesEstacoes[i]);
+        }
+    }
+    free(nomesEstacoes);
+    free(parEstacaoA);
+    free(parEstacaoB);
+
     /* Atualiza cabeçalho final e fecha consistentemente */
     escreverCabecalho(bin, &cabecalho);
     fecharArquivoBin(bin);
@@ -186,6 +168,81 @@ void funcionalidade2() {
 
     if (!encontrou) {
         printf("Registro inexistente.\n");
+    }
+
+    fclose(bin);
+}
+
+void funcionalidade3() {
+    char nomeArquivo[256];
+    scanf("%s", nomeArquivo);
+
+    int n;
+    scanf("%d", &n);
+
+    FILE *bin = abrirArquivoBin(nomeArquivo, "rb");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    CabecalhoArquivo cabecalho;
+    lerCabecalho(bin, &cabecalho);
+
+    if (cabecalho.status == STATUS_INCONSISTENTE) {
+        fclose(bin);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    /* Executa n buscas consecutivas */
+    for (int busca = 0; busca < n; busca++) {
+        int qtdValidacoes;
+        scanf("%d", &qtdValidacoes);
+
+        Validacao* validacoes = malloc(sizeof(Validacao)*qtdValidacoes);
+
+        for (int c = 0; c < qtdValidacoes; c++) {
+            validacoes[c].campo = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+            validacoes[c].valor = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+            scanf("%s", validacoes[c].campo);
+
+            if (strcmp(validacoes[c].campo, "nomeEstacao") == 0
+            ||  strcmp(validacoes[c].campo, "nomeLinha") == 0) {
+                ScanQuoteString(validacoes[c].valor);
+            } else {
+                scanf("%s", validacoes[c].valor);
+            }
+        }
+
+        int encontrou = 0;
+
+        /* Percorre todos os RRNs para esta busca */
+        for (int rrn = 0; rrn < cabecalho.proxRRN; rrn++) {
+            RegistroDados reg;
+            lerRegistro(bin, &reg, rrn);
+
+            if (reg.removido == REGISTRO_REMOVIDO) continue;
+
+            /* Executa validações */
+            if (validarCampos(&reg, validacoes, qtdValidacoes)) {
+                imprimirRegistro(&reg);
+                encontrou = 1;
+            }
+        }
+
+        if (!encontrou) {
+            printf("Registro inexistente.\n");
+        }
+
+        /* Libera memoria */
+        for (int c = 0; c < qtdValidacoes; c++) {
+            free(validacoes[c].campo);
+            free(validacoes[c].valor);
+        }
+        free(validacoes);
+
+        printf("\n");
     }
 
     fclose(bin);
