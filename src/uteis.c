@@ -131,9 +131,12 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
             free(validacoes[c].campo);
             free(validacoes[c].valor);
         }
+
         free(validacoes);
 
-        printf("\n");
+        if (acao == acaoImprimir) {
+            printf("\n");
+        }
     }
 }
 
@@ -168,24 +171,70 @@ bool AdicionarNumeroEmVetor(int num, int *vetor, int tam) {
     return true;
 }
 
-void contarEstacoes(FILE *bin, CabecalhoArquivo *cabecalho) {
-    int *estacoesEncontradas = malloc(cabecalho->proxRRN * sizeof(int)); //vetor com tamanho máximo correspondente ao número de registros
-    int qtdEncontradas = 0; //também serve de controle do tamanho real do vetor
-
-    for(int rrn = 0; rrn < cabecalho->proxRRN; rrn++) {
-        RegistroDados reg;
-        lerRegistro(bin, &reg, rrn);
-
-        bool primeiraAparicao = AdicionarNumeroEmVetor(reg.codEstacao, estacoesEncontradas, qtdEncontradas);
-
-        if (reg.removido == REGISTRO_REMOVIDO) continue;
-        //se AdicionarNumeroEmVetor retornou true, quer dizer que é uma estação nova, devemos incrementar a quantidade
-        if (primeiraAparicao)
-            qtdEncontradas++;
+void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
+    int total = cabecalho->proxRRN;
+ 
+    char **nomesEstacoes = malloc(sizeof(char *) * total);
+    int  *parEstacaoA    = malloc(sizeof(int)    * total);
+    int  *parEstacaoB    = malloc(sizeof(int)    * total);
+ 
+    /* Lê todos os registros, ignorando removidos */
+    RegistroDados reg;
+    for (int i = 0; i < total; i++) {
+        lerRegistro(bin, &reg, i);
+ 
+        if (reg.removido == REGISTRO_REMOVIDO) {
+            nomesEstacoes[i] = NULL;
+            parEstacaoA[i] = INTEIRO_NULO;
+            parEstacaoB[i] = INTEIRO_NULO;
+            continue;
+        }
+ 
+        nomesEstacoes[i] = reg.tamNomeEstacao > 0 ? strdup(reg.nomeEstacao) : NULL;
+        parEstacaoA[i] = reg.codEstacao;
+        parEstacaoB[i] = reg.codProxEstacao;
     }
-
-    //atualizar o número de estações no cabecalho
-    cabecalho->nroEstacoes = qtdEncontradas;
-
-    free(estacoesEncontradas);
+ 
+    /* Conta estações distintas por nome */
+    int contadorEstacoes = 0;
+    for (int i = 0; i < total; i++) {
+        if (nomesEstacoes[i] == NULL) continue;
+    
+        contadorEstacoes++;
+    
+        for (int j = i + 1; j < total; j++) {
+            if (nomesEstacoes[j] != NULL &&
+                strcmp(nomesEstacoes[i], nomesEstacoes[j]) == 0) {
+                free(nomesEstacoes[j]);
+                nomesEstacoes[j] = NULL;
+            }
+        }
+    }
+ 
+    /* Conta pares (A,B) distintos — (A,B) e (B,A) são o mesmo par */
+    int contadorPares = 0;
+    for (int i = 0; i < total; i++) {
+        if (parEstacaoA[i] == INTEIRO_NULO || parEstacaoB[i] == INTEIRO_NULO) continue;
+ 
+        contadorPares++;
+ 
+        for (int j = i + 1; j < total; j++) {
+            if (parEstacaoA[j] == INTEIRO_NULO || parEstacaoB[j] == INTEIRO_NULO) continue;
+ 
+            if ((parEstacaoA[i] == parEstacaoA[j] && parEstacaoB[i] == parEstacaoB[j]) ||
+                (parEstacaoA[i] == parEstacaoB[j] && parEstacaoB[i] == parEstacaoA[j])) {
+                parEstacaoA[j] = INTEIRO_NULO;
+                parEstacaoB[j] = INTEIRO_NULO;
+            }
+        }
+    }
+ 
+    /* Limpeza */
+    for (int i = 0; i < total; i++) free(nomesEstacoes[i]);
+    free(nomesEstacoes);
+    free(parEstacaoA);
+    free(parEstacaoB);
+ 
+    cabecalho->nroEstacoes = contadorEstacoes;
+    cabecalho->nroParesEstacao = contadorPares;
 }

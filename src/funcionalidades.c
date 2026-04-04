@@ -217,11 +217,14 @@ void funcionalidade4() {
     CabecalhoArquivo cabecalho;
     lerCabecalho(bin, &cabecalho);
 
+    /* Define status do cabeçalho como inconsistente para segurança */
+    marcarInconsistente(bin);
+
     //assim como na funcionalidade 3, usamos a função busca, mas dessa vez passando a função removerLogic() como parâmetro
     busca(bin, &cabecalho, n, removerLogic);
 
-    contarEstacoes(bin, &cabecalho);
-    //contarPares(bin, &cabecalho)
+    /* Atualiza nroEstacoes e nroParesEstacao no cabeçalho */
+    atualizarCabecalho(bin, &cabecalho);
 
     //atualizar o cabeçalho no arquivo após as remoções
     escreverCabecalho(bin, &cabecalho);
