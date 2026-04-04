@@ -18,11 +18,6 @@ FILE *abrirArquivoBin(const char *nomeArquivo, const char *modo) {
         return NULL;
     }
 
-    /* Ao abrir para escrita, marca imediatamente como inconsistente */
-    if (modo[0] == 'w' || modo[0] == 'a' || strchr(modo, '+') != NULL) {
-        marcarInconsistente(bin);
-    }
-
     return bin;
 }
 

@@ -217,6 +217,13 @@ void funcionalidade4() {
     CabecalhoArquivo cabecalho;
     lerCabecalho(bin, &cabecalho);
 
+    /* Verifica se o arquivo está consistente */
+    if (cabecalho.status == STATUS_INCONSISTENTE) {
+        fclose(bin);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
     /* Define status do cabeçalho como inconsistente para segurança */
     marcarInconsistente(bin);
 
@@ -234,3 +241,99 @@ void funcionalidade4() {
     BinarioNaTela(nomeArquivo); //exibe o binário após fechar
     return;
 }
+
+void funcionalidade5() {
+    char nomeArquivo[256];
+    scanf("%s", nomeArquivo);
+
+    FILE *bin = abrirArquivoBin(nomeArquivo, "rb+");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    /* Número de inserções */
+    int n;
+    scanf("%d", &n);
+
+    CabecalhoArquivo cabecalho;
+    lerCabecalho(bin, &cabecalho);
+
+    /* Verifica se o arquivo está consistente */
+    if (cabecalho.status == STATUS_INCONSISTENTE) {
+        fclose(bin);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    marcarInconsistente(bin);
+
+    for (int insercao = 0; insercao < n; insercao++) {
+        RegistroDados novoReg;
+        inicializarRegistro(&novoReg);
+
+        /* Lê dados do usuário */
+        char* leitura = malloc(TAMANHO_MAX_NOME);
+
+        /* codEstacao */
+        scanf("%s", leitura);
+        novoReg.codEstacao = stringNulavelParaInteiro(leitura);
+
+        /* nomeEstacao */
+        ScanQuoteString(novoReg.nomeEstacao);
+        novoReg.tamNomeEstacao = strlen(novoReg.nomeEstacao);
+
+        /* codLinha */
+        scanf("%s", leitura);
+        novoReg.codLinha = stringNulavelParaInteiro(leitura);
+
+        /* nomeLinha */
+        ScanQuoteString(novoReg.nomeLinha);
+        novoReg.tamNomeLinha = strlen(novoReg.nomeLinha);
+
+        /* codProxEstacao */
+        scanf("%s", leitura);
+        novoReg.codProxEstacao = stringNulavelParaInteiro(leitura);
+
+        /* distProxEstacao */
+        scanf("%s", leitura);
+        novoReg.distProxEstacao = stringNulavelParaInteiro(leitura);
+
+        /* codLinhaIntegra */
+        scanf("%s", leitura);
+        novoReg.codLinhaIntegra = stringNulavelParaInteiro(leitura);
+
+        /* codEstIntegra */
+        scanf("%s", leitura);
+        novoReg.codEstIntegra = stringNulavelParaInteiro(leitura);
+
+        free(leitura);
+
+        int rrnDestino;
+
+        if (cabecalho.topo != INTEIRO_NULO) {
+            /* Reaproveitamento: usa o topo da pilha */
+            rrnDestino = cabecalho.topo;
+
+            RegistroDados regRemovido;
+            lerRegistro(bin, &regRemovido, rrnDestino);
+            cabecalho.topo = regRemovido.proximo; /* desempilha */
+        } else {
+            /* Pilha vazia: insere ao final */
+            rrnDestino = cabecalho.proxRRN;
+            cabecalho.proxRRN++;
+        }
+
+        novoReg.removido = REGISTRO_ATIVO;
+        novoReg.proximo  = INTEIRO_NULO;
+        escreverRegistro(bin, &novoReg, rrnDestino);
+    }
+
+    atualizarCabecalho(bin, &cabecalho);
+
+    escreverCabecalho(bin, &cabecalho);
+    fecharArquivoBin(bin);
+
+    BinarioNaTela(nomeArquivo);
+}
+
