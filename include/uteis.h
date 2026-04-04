@@ -66,4 +66,11 @@ void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, in
  */
 void acaoImprimir(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn);
 
+/**
+ * @brief Atualizar o número de estações no cabeçalho
+ * 
+ * Percorre o arquivo e conta o número de estações pelo codEstacao.
+ * Atualiza nroEstacoes no cabeçalho.
+ */
+void contarEstacoes(FILE *bin, CabecalhoArquivo *cabecalho);
 #endif

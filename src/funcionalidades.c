@@ -220,6 +220,9 @@ void funcionalidade4() {
     //assim como na funcionalidade 3, usamos a função busca, mas dessa vez passando a função removerLogic() como parâmetro
     busca(bin, &cabecalho, n, removerLogic);
 
+    contarEstacoes(bin, &cabecalho);
+    //contarPares(bin, &cabecalho)
+
     //atualizar o cabeçalho no arquivo após as remoções
     escreverCabecalho(bin, &cabecalho);
 

@@ -152,3 +152,40 @@ void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, in
 
     return;
 }
+
+//função auxiliar de contarEstacoes, assume que a segurança de tamanho e memória do vetor está sendo garantido por ela.
+//Checa se um número já está no vetor. Se não estiver, adiciona no final e retorna true. Se já estiver, retorna false.
+bool AdicionarNumeroEmVetor(int num, int *vetor, int tam) {
+    int i;
+    
+    for (i = 0; i < tam; i++) {
+        if (vetor[i] == num)
+            return false; //esse número já está presente!
+    }
+
+    //se chegou até aqui, o número não está presente na lista, vamos adicioná-lo ao final
+    vetor[tam] = num;
+    return true;
+}
+
+void contarEstacoes(FILE *bin, CabecalhoArquivo *cabecalho) {
+    int *estacoesEncontradas = malloc(cabecalho->proxRRN * sizeof(int)); //vetor com tamanho máximo correspondente ao número de registros
+    int qtdEncontradas = 0; //também serve de controle do tamanho real do vetor
+
+    for(int rrn = 0; rrn < cabecalho->proxRRN; rrn++) {
+        RegistroDados reg;
+        lerRegistro(bin, &reg, rrn);
+
+        bool primeiraAparicao = AdicionarNumeroEmVetor(reg.codEstacao, estacoesEncontradas, qtdEncontradas);
+
+        if (reg.removido == REGISTRO_REMOVIDO) continue;
+        //se AdicionarNumeroEmVetor retornou true, quer dizer que é uma estação nova, devemos incrementar a quantidade
+        if (primeiraAparicao)
+            qtdEncontradas++;
+    }
+
+    //atualizar o número de estações no cabecalho
+    cabecalho->nroEstacoes = qtdEncontradas;
+
+    free(estacoesEncontradas);
+}
