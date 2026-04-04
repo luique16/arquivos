@@ -195,55 +195,33 @@ void funcionalidade3() {
         return;
     }
 
-    /* Executa n buscas consecutivas */
-    for (int busca = 0; busca < n; busca++) {
-        int qtdValidacoes;
-        scanf("%d", &qtdValidacoes);
-
-        Validacao* validacoes = malloc(sizeof(Validacao)*qtdValidacoes);
-
-        for (int c = 0; c < qtdValidacoes; c++) {
-            validacoes[c].campo = malloc(sizeof(char)*TAMANHO_MAX_NOME);
-            validacoes[c].valor = malloc(sizeof(char)*TAMANHO_MAX_NOME);
-            scanf("%s", validacoes[c].campo);
-
-            if (strcmp(validacoes[c].campo, "nomeEstacao") == 0
-            ||  strcmp(validacoes[c].campo, "nomeLinha") == 0) {
-                ScanQuoteString(validacoes[c].valor);
-            } else {
-                scanf("%s", validacoes[c].valor);
-            }
-        }
-
-        int encontrou = 0;
-
-        /* Percorre todos os RRNs para esta busca */
-        for (int rrn = 0; rrn < cabecalho.proxRRN; rrn++) {
-            RegistroDados reg;
-            lerRegistro(bin, &reg, rrn);
-
-            if (reg.removido == REGISTRO_REMOVIDO) continue;
-
-            /* Executa validações */
-            if (validarCampos(&reg, validacoes, qtdValidacoes)) {
-                imprimirRegistro(&reg);
-                encontrou = 1;
-            }
-        }
-
-        if (!encontrou) {
-            printf("Registro inexistente.\n");
-        }
-
-        /* Libera memoria */
-        for (int c = 0; c < qtdValidacoes; c++) {
-            free(validacoes[c].campo);
-            free(validacoes[c].valor);
-        }
-        free(validacoes);
-
-        printf("\n");
-    }
+    //a partir daqui, foi modularizado na função busca(FILE *bin, CabecalhoArquivo cabecalho, int n, void (*acao)(tipos da função acao))
+    busca(bin, &cabecalho, n, acaoImprimir);
 
     fclose(bin);
+}
+
+void funcionalidade4() {
+    char nomeArquivo[256];
+    scanf("%s", nomeArquivo);
+
+    int n;
+    scanf("%d", &n);
+
+    FILE *bin = abrirArquivoBin(nomeArquivo, "rb+");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    CabecalhoArquivo cabecalho;
+    lerCabecalho(bin, &cabecalho);
+
+    //assim como na funcionalidade 3, usamos a função busca, mas dessa vez passando a função removerLogic() como parâmetro
+    busca(bin, &cabecalho, n, removerLogic);
+
+    fclose(bin);
+
+    BinarioNaTela(nomeArquivo); //exibe o binário após fechar
+    return;
 }

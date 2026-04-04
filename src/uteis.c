@@ -5,6 +5,8 @@
 
 #include "../include/uteis.h"
 #include "../include/definicoes.h"
+#include "../include/io.h"
+#include "../include/fornecidas.h"
 #include <string.h>
 
 void imprimirRegistro(RegistroDados *reg) {
@@ -29,6 +31,10 @@ void imprimirRegistro(RegistroDados *reg) {
     }
 
     printf("\n");
+}
+
+void acaoImprimir(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn) {
+    imprimirRegistro(reg);
 }
 
 int stringNulavelParaInteiro(char* string) {
@@ -77,4 +83,78 @@ bool validarCampos(RegistroDados* reg, Validacao* validacoes, int qtdValidacoes)
     }
 
     return true;
+}
+
+void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, CabecalhoArquivo *c, RegistroDados *reg, int rrn)) {
+    /* Executa n buscas consecutivas */
+    for (int i = 0; i < n; i++) {
+        int qtdValidacoes;
+        scanf("%d", &qtdValidacoes);
+
+        Validacao* validacoes = malloc(sizeof(Validacao)*qtdValidacoes);
+
+        for (int c = 0; c < qtdValidacoes; c++) {
+            validacoes[c].campo = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+            validacoes[c].valor = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+            scanf("%s", validacoes[c].campo);
+
+            if (strcmp(validacoes[c].campo, "nomeEstacao") == 0
+            ||  strcmp(validacoes[c].campo, "nomeLinha") == 0) {
+                ScanQuoteString(validacoes[c].valor);
+            } else {
+                scanf("%s", validacoes[c].valor);
+            }
+        }
+
+        int encontrou = 0;
+
+        /* Percorre todos os RRNs para esta busca */
+        for (int rrn = 0; rrn < cabecalho->proxRRN; rrn++) {
+            RegistroDados reg;
+            lerRegistro(bin, &reg, rrn);
+
+            if (reg.removido == REGISTRO_REMOVIDO) continue;
+
+            /* Executa validações */
+            if (validarCampos(&reg, validacoes, qtdValidacoes)) {
+                acao(bin, cabecalho, &reg, rrn);
+                encontrou = 1;
+            }
+        }
+
+        if (!encontrou) {
+            printf("Registro inexistente.\n");
+        }
+
+        /* Libera memoria */
+        for (int c = 0; c < qtdValidacoes; c++) {
+            free(validacoes[c].campo);
+            free(validacoes[c].valor);
+        }
+        free(validacoes);
+
+        printf("\n");
+    }
+}
+
+void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn) {
+    reg->removido = REGISTRO_REMOVIDO;
+
+    //atualizar os valores relacionados à pilha dos removidos
+    reg->proximo = cabecalho->topo;
+    cabecalho->topo = rrn;
+
+    //atualizar no arquivo, não compensa usar as funções escreverCabecalho e escreverRegistro para mudar poucos campos iniciais
+
+    //atualizar o cabeçalho
+    fseek(bin, 1, SEEK_SET); //o byte 1 corresponde ao topo
+    fwrite(&cabecalho->topo, sizeof(int),  1, bin);
+
+    //atualizar o registro
+    long offsetInicio = rrnParaOffset(rrn);
+    fseek(bin, offsetInicio, SEEK_SET);
+    fwrite(&reg->removido, sizeof(char), 1, bin);
+    fwrite(&reg->proximo, sizeof(int), 1, bin);
+
+    return;
 }
