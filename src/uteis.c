@@ -144,13 +144,7 @@ void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, in
     reg->proximo = cabecalho->topo;
     cabecalho->topo = rrn;
 
-    //atualizar no arquivo, não compensa usar as funções escreverCabecalho e escreverRegistro para mudar poucos campos iniciais
-
-    //atualizar o cabeçalho
-    fseek(bin, 1, SEEK_SET); //o byte 1 corresponde ao topo
-    fwrite(&cabecalho->topo, sizeof(int),  1, bin);
-
-    //atualizar o registro
+    //atualizar o registro no arquivo, não compensa usar escreverRegistro para mudar apenas os campos iniciais
     long offsetInicio = rrnParaOffset(rrn);
     fseek(bin, offsetInicio, SEEK_SET);
     fwrite(&reg->removido, sizeof(char), 1, bin);

@@ -220,7 +220,10 @@ void funcionalidade4() {
     //assim como na funcionalidade 3, usamos a função busca, mas dessa vez passando a função removerLogic() como parâmetro
     busca(bin, &cabecalho, n, removerLogic);
 
-    fclose(bin);
+    //atualizar o cabeçalho no arquivo após as remoções
+    escreverCabecalho(bin, &cabecalho);
+
+    fecharArquivoBin(bin);
 
     BinarioNaTela(nomeArquivo); //exibe o binário após fechar
     return;
