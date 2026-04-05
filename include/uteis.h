@@ -73,4 +73,12 @@ void acaoImprimir(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, in
  * Atualiza nroEstacoes e nroParesEstacao no cabeçalho.
  */
 void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho);
+
+/**
+ * @brief Atualizar o registro com campos e valores informados pelo usuário
+ * 
+ * Pede o input do número p e, em seguida, pede o input de p pares de campos e valores.
+ * Atualiza cada um dos campos do registro em questão com os novos valores
+ */
+void atualizarRegistro(FILE *bin, RegistroDados *reg, int rrn);
 #endif

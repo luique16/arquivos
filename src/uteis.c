@@ -106,6 +106,10 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
             }
         }
 
+        if (acao == atualizarRegistro) {
+
+        }
+
         int encontrou = 0;
 
         /* Percorre todos os RRNs para esta busca */
@@ -154,21 +158,6 @@ void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, in
     fwrite(&reg->proximo, sizeof(int), 1, bin);
 
     return;
-}
-
-//função auxiliar de contarEstacoes, assume que a segurança de tamanho e memória do vetor está sendo garantido por ela.
-//Checa se um número já está no vetor. Se não estiver, adiciona no final e retorna true. Se já estiver, retorna false.
-bool AdicionarNumeroEmVetor(int num, int *vetor, int tam) {
-    int i;
-    
-    for (i = 0; i < tam; i++) {
-        if (vetor[i] == num)
-            return false; //esse número já está presente!
-    }
-
-    //se chegou até aqui, o número não está presente na lista, vamos adicioná-lo ao final
-    vetor[tam] = num;
-    return true;
 }
 
 void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
@@ -237,4 +226,70 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
  
     cabecalho->nroEstacoes = contadorEstacoes;
     cabecalho->nroParesEstacao = contadorPares;
+}
+
+void coletarRRNs(int *vet, int tam, int rrn) {
+    
+}
+
+Validacao *getAtualizacoes(int qtdCampos) {
+    Validacao *atualizacoes = malloc(qtdCampos * sizeof(Validacao)); // Vetor que guarda os novos pares {campo, valor}
+
+    for (int c = 0; c < qtdCampos; c++) {
+        atualizacoes[c].campo = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+        atualizacoes[c].valor = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+        scanf("%s", atualizacoes[c].campo);
+
+        if (strcmp(atualizacoes[c].campo, "nomeEstacao") == 0
+        ||  strcmp(atualizacoes[c].campo, "nomeLinha") == 0) {
+            ScanQuoteString(atualizacoes[c].valor);
+        } else {
+            scanf("%s", atualizacoes[c].valor);
+        }
+    }
+
+    return atualizacoes;
+}
+
+// Função auxiliar de atualizarRegistro que atualiza os valores dos campos de um único registro
+void atualizarCampos(RegistroDados *reg, Validacao *atualizacoes, int qtdCampos) {
+    for (int i = 0; i < qtdCampos; i++) {
+        if (strcmp(atualizacoes[i].campo, "codEstacao") == 0) {
+            reg->codEstacao = stringNulavelParaInteiro(atualizacoes[i].valor);
+        } else if (strcmp(atualizacoes[i].campo, "codLinha") == 0) {
+            reg->codLinha = stringNulavelParaInteiro(atualizacoes[i].valor);
+        } else if (strcmp(atualizacoes[i].campo, "codProxEstacao") == 0) {
+            reg->codProxEstacao = stringNulavelParaInteiro(atualizacoes[i].valor);
+        } else if (strcmp(atualizacoes[i].campo, "distProxEstacao") == 0) {
+            reg->distProxEstacao = stringNulavelParaInteiro(atualizacoes[i].valor);
+        } else if (strcmp(atualizacoes[i].campo, "codLinhaIntegra") == 0) {
+            reg->codLinhaIntegra = stringNulavelParaInteiro(atualizacoes[i].valor);
+        } else if (strcmp(atualizacoes[i].campo, "codEstIntegra") == 0) {
+            reg->codEstIntegra = stringNulavelParaInteiro(atualizacoes[i].valor);
+        } else if (strcmp(atualizacoes[i].campo, "nomeEstacao") == 0) {
+            strcpy(reg->nomeEstacao, atualizacoes[i].valor);
+            reg->tamNomeEstacao = strlen(reg->nomeEstacao);
+        } else if (strcmp(atualizacoes[i].campo, "nomeLinha") == 0) {
+            strcpy(reg->nomeLinha, atualizacoes[i].valor);
+            reg->tamNomeLinha = strlen(reg->nomeLinha);
+        }
+    }
+}
+
+void atualizarRegistro(FILE *bin, RegistroDados *reg, Validacao *atualizacoes, int rrn) {
+    int qtdCampos;
+    scanf("%d");
+
+    getAtualizacoes(qtdCampos);
+    
+    atualizarCampos(reg, atualizacoes, qtdCampos);
+    escreverRegistro(bin, reg, rrn); // Reescreve no arquivo o registro, que agora tem os valores atualizados
+
+    // Liberar a memória
+    for (int c = 0; c < qtdCampos; c++) {
+        free(atualizacoes[c].campo);
+        free(atualizacoes[c].valor);
+    }
+
+    free(atualizacoes);
 }
