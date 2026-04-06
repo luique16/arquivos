@@ -31,6 +31,9 @@ int main(void) {
         case 5:
             funcionalidade5();
             break;
+        case 6:
+            funcionalidade6();
+            break;
         default:
             fprintf(stderr, "Falha no processamento do arquivo.\n");
             return 1;

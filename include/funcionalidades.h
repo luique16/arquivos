@@ -34,7 +34,7 @@ void funcionalidade2();
 void funcionalidade3();
 
 /**
- * @brief [4] DELETE — Busca registros por um ou mais campos e deleta-os
+ * @brief [4] DELETE — Busca registros por um ou mais campos e deleta-os.
  * 
  * Utiliza a busca implementada na funcionalidade 3 para percorrer o arquivo e encontrar os registros. 
  * Ao encontrar um registro que satisfaça a busca, marca-o como logicamente removido e atualiza os valores da pilha.
@@ -48,4 +48,13 @@ void funcionalidade4();
  * Caso contrário, insere ao final do arquivo. Executa n inserções.
  */
 void funcionalidade5();
+
+/**
+ * @brief [6] UPDATE — Atualização de valores de campos nos registros.
+ * 
+ * Faz uma busca por registros que correspondam aos campos de valores fornecidos.
+ * Recebe novos valores para campos especificados pelo usuário.
+ * Atualiza os campos em questão dos registros encontrados pela busca.
+ */
+void funcionalidade6();
 #endif

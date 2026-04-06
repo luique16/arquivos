@@ -33,7 +33,7 @@ void imprimirRegistro(RegistroDados *reg) {
     printf("\n");
 }
 
-void acaoImprimir(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn) {
+void acaoImprimir(FILE *, CabecalhoArquivo *, RegistroDados *reg, int, Validacao *, int) {
     imprimirRegistro(reg);
 }
 
@@ -84,8 +84,28 @@ bool validarCampos(RegistroDados* reg, Validacao* validacoes, int qtdValidacoes)
 
     return true;
 }
+ 
+// Essa função só será útil para a funcionalidade 6
+Validacao *getAtualizacoes(int qtdCampos) {
+    Validacao *atualizacoes = malloc(qtdCampos * sizeof(Validacao)); // Vetor que guarda os novos pares {campo, valor}
 
-void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, CabecalhoArquivo *c, RegistroDados *reg, int rrn)) {
+    for (int c = 0; c < qtdCampos; c++) {
+        atualizacoes[c].campo = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+        atualizacoes[c].valor = malloc(sizeof(char)*TAMANHO_MAX_NOME);
+        scanf("%s", atualizacoes[c].campo);
+
+        if (strcmp(atualizacoes[c].campo, "nomeEstacao") == 0
+        ||  strcmp(atualizacoes[c].campo, "nomeLinha") == 0) {
+            ScanQuoteString(atualizacoes[c].valor);
+        } else {
+            scanf("%s", atualizacoes[c].valor);
+        }
+    }
+
+    return atualizacoes;
+}
+
+void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, CabecalhoArquivo *c, RegistroDados *reg, int rrn, Validacao *atualizacoes, int qtdCampos)) {
     /* Executa n buscas consecutivas */
     for (int i = 0; i < n; i++) {
         int qtdValidacoes;
@@ -106,8 +126,12 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
             }
         }
 
+        // Neste caso, devemos coletar os campos e os valores a serem atualizados antes de percorrer o arquivo
+        Validacao *atualizacoes = NULL;
+        int qtdCampos = 0;
         if (acao == atualizarRegistro) {
-
+            scanf("%d", &qtdCampos);
+            atualizacoes = getAtualizacoes(qtdCampos);
         }
 
         int encontrou = 0;
@@ -121,12 +145,12 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
 
             /* Executa validações */
             if (validarCampos(&reg, validacoes, qtdValidacoes)) {
-                acao(bin, cabecalho, &reg, rrn);
-                encontrou = 1;
+                acao(bin, cabecalho, &reg, rrn, atualizacoes, qtdCampos);
+                encontrou++;
             }
         }
 
-        if (!encontrou) {
+        if (encontrou == 0 && acao == acaoImprimir) {
             printf("Registro inexistente.\n");
         }
 
@@ -135,8 +159,8 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
             free(validacoes[c].campo);
             free(validacoes[c].valor);
         }
-
         free(validacoes);
+        if (atualizacoes != NULL) free(atualizacoes);
 
         if (acao == acaoImprimir) {
             printf("\n");
@@ -144,7 +168,7 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
     }
 }
 
-void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn) {
+void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn, Validacao *, int) {
     reg->removido = REGISTRO_REMOVIDO;
 
     //atualizar os valores relacionados à pilha dos removidos
@@ -228,28 +252,7 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
     cabecalho->nroParesEstacao = contadorPares;
 }
 
-void coletarRRNs(int *vet, int tam, int rrn) {
-    
-}
-
-Validacao *getAtualizacoes(int qtdCampos) {
-    Validacao *atualizacoes = malloc(qtdCampos * sizeof(Validacao)); // Vetor que guarda os novos pares {campo, valor}
-
-    for (int c = 0; c < qtdCampos; c++) {
-        atualizacoes[c].campo = malloc(sizeof(char)*TAMANHO_MAX_NOME);
-        atualizacoes[c].valor = malloc(sizeof(char)*TAMANHO_MAX_NOME);
-        scanf("%s", atualizacoes[c].campo);
-
-        if (strcmp(atualizacoes[c].campo, "nomeEstacao") == 0
-        ||  strcmp(atualizacoes[c].campo, "nomeLinha") == 0) {
-            ScanQuoteString(atualizacoes[c].valor);
-        } else {
-            scanf("%s", atualizacoes[c].valor);
-        }
-    }
-
-    return atualizacoes;
-}
+// FUNÇÕES RELACIONADAS À FUNCIONALIDADE 6
 
 // Função auxiliar de atualizarRegistro que atualiza os valores dos campos de um único registro
 void atualizarCampos(RegistroDados *reg, Validacao *atualizacoes, int qtdCampos) {
@@ -276,20 +279,7 @@ void atualizarCampos(RegistroDados *reg, Validacao *atualizacoes, int qtdCampos)
     }
 }
 
-void atualizarRegistro(FILE *bin, RegistroDados *reg, Validacao *atualizacoes, int rrn) {
-    int qtdCampos;
-    scanf("%d");
-
-    getAtualizacoes(qtdCampos);
-    
+void atualizarRegistro(FILE *bin, CabecalhoArquivo *, RegistroDados *reg, int rrn, Validacao *atualizacoes, int qtdCampos) {
     atualizarCampos(reg, atualizacoes, qtdCampos);
     escreverRegistro(bin, reg, rrn); // Reescreve no arquivo o registro, que agora tem os valores atualizados
-
-    // Liberar a memória
-    for (int c = 0; c < qtdCampos; c++) {
-        free(atualizacoes[c].campo);
-        free(atualizacoes[c].valor);
-    }
-
-    free(atualizacoes);
 }

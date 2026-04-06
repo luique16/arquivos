@@ -49,7 +49,7 @@ bool validarCampos(RegistroDados* reg, Validacao* validacoes, int qtdValidacoes)
  * Executa n buscas consecutivas, cada uma recebendo um ou mais campos e seus respectivos valores como entrada.
  * Ao encontrar um registro compatível, executa uma função, passada como ponteiro em uma espécie de callback.
  */
-void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn));
+void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn, Validacao *atualizacoes, int qtdCampos));
 
 /**
  * @brief Faz a remoção lógica de um registro
@@ -57,14 +57,14 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *bin
  * Dado um ponteiro para um registro, marca ele como logicamente removido e atualiza o campo proximo para o próximo valor da pilha de remoção.
  * Além disso, grava essa alteração no arquivo binário.
  */
-void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn);
+void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn, Validacao *, int);
 
 /**
  * @brief Wrapper da função imprimirRegistro
  * 
  * Wrapper para que a função imprimirRegistro possa ser usada como callback dentro de busca sem ficar poluída com parâmetros desnecessários
  */
-void acaoImprimir(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, int rrn);
+void acaoImprimir(FILE *, CabecalhoArquivo *, RegistroDados *reg, int, Validacao *, int);
 
 /**
  * @brief Atualizar o número de estações e pares de estações no cabeçalho
@@ -80,5 +80,6 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho);
  * Pede o input do número p e, em seguida, pede o input de p pares de campos e valores.
  * Atualiza cada um dos campos do registro em questão com os novos valores
  */
-void atualizarRegistro(FILE *bin, RegistroDados *reg, int rrn);
+void atualizarRegistro(FILE *bin, CabecalhoArquivo *, RegistroDados *reg, int rrn, Validacao *atualizacoes, int qtdCampos);
+
 #endif
