@@ -160,7 +160,14 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
             free(validacoes[c].valor);
         }
         free(validacoes);
-        if (atualizacoes != NULL) free(atualizacoes);
+
+        if (atualizacoes != NULL) {
+            for (int c = 0; c < qtdCampos; c++) {
+                free(atualizacoes[c].campo);
+                free(atualizacoes[c].valor);
+            }
+            free(atualizacoes);
+        } 
 
         if (acao == acaoImprimir) {
             printf("\n");
@@ -187,22 +194,22 @@ void removerLogic(FILE *bin, CabecalhoArquivo *cabecalho, RegistroDados *reg, in
 void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
     int total = cabecalho->proxRRN;
  
-    char **nomesEstacoes = malloc(sizeof(char *) * total);
-    int  *parEstacaoA    = malloc(sizeof(int)    * total);
-    int  *parEstacaoB    = malloc(sizeof(int)    * total);
+    char **nomesEstacoes = malloc(sizeof(char *)*total);
+    int *parEstacaoA = malloc(sizeof(int)*total);
+    int *parEstacaoB = malloc(sizeof(int)*total);
  
     /* Lê todos os registros, ignorando removidos */
     RegistroDados reg;
     for (int i = 0; i < total; i++) {
         lerRegistro(bin, &reg, i);
- 
+        
         if (reg.removido == REGISTRO_REMOVIDO) {
             nomesEstacoes[i] = NULL;
             parEstacaoA[i] = INTEIRO_NULO;
             parEstacaoB[i] = INTEIRO_NULO;
             continue;
         }
- 
+        
         nomesEstacoes[i] = reg.tamNomeEstacao > 0 ? strdup(reg.nomeEstacao) : NULL;
         parEstacaoA[i] = reg.codEstacao;
         parEstacaoB[i] = reg.codProxEstacao;
@@ -212,9 +219,9 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
     int contadorEstacoes = 0;
     for (int i = 0; i < total; i++) {
         if (nomesEstacoes[i] == NULL) continue;
-    
+        
         contadorEstacoes++;
-    
+        
         for (int j = i + 1; j < total; j++) {
             if (nomesEstacoes[j] != NULL &&
                 strcmp(nomesEstacoes[i], nomesEstacoes[j]) == 0) {
@@ -228,12 +235,12 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
     int contadorPares = 0;
     for (int i = 0; i < total; i++) {
         if (parEstacaoA[i] == INTEIRO_NULO || parEstacaoB[i] == INTEIRO_NULO) continue;
- 
+        
         contadorPares++;
- 
+        
         for (int j = i + 1; j < total; j++) {
             if (parEstacaoA[j] == INTEIRO_NULO || parEstacaoB[j] == INTEIRO_NULO) continue;
- 
+            
             if ((parEstacaoA[i] == parEstacaoA[j] && parEstacaoB[i] == parEstacaoB[j]) ||
                 (parEstacaoA[i] == parEstacaoB[j] && parEstacaoB[i] == parEstacaoA[j])) {
                 parEstacaoA[j] = INTEIRO_NULO;
@@ -241,13 +248,13 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
             }
         }
     }
- 
+    
     /* Limpeza */
     for (int i = 0; i < total; i++) free(nomesEstacoes[i]);
     free(nomesEstacoes);
     free(parEstacaoA);
     free(parEstacaoB);
- 
+    
     cabecalho->nroEstacoes = contadorEstacoes;
     cabecalho->nroParesEstacao = contadorPares;
 }

@@ -1,4 +1,10 @@
 /**
+ * Alunos:
+ * - Ícaro Ramos Caye - 16814290
+ * - Luís Henrique Fonseca Aguilar - 16885720
+ */
+
+/**
  * @file main.c
  * @brief Ponto de entrada do programa programaTrab.
  *
