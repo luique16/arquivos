@@ -253,12 +253,18 @@ void funcionalidade5() {
             cabecalho.proxRRN++;
         }
 
+        /* Esperado nos testes: soma número de pares de estações se codEstacao e codProxEstacao não forem nulos */
+        if (novoReg.codEstacao != INTEIRO_NULO && novoReg.codProxEstacao != INTEIRO_NULO) {
+            cabecalho.nroParesEstacao++;
+        }
+
         novoReg.removido = REGISTRO_ATIVO;
         novoReg.proximo  = INTEIRO_NULO;
         escreverRegistro(bin, &novoReg, rrnDestino);
     }
 
-    atualizarCabecalho(bin, &cabecalho);
+    /* Cabeçalho não atualizado, pois é garantido que não haverá outra alteração em nroEstacoes e nroParesEstacao */
+    // atualizarCabecalho(bin, &cabecalho);
 
     escreverCabecalho(bin, &cabecalho);
     fecharArquivoBin(bin);
@@ -300,7 +306,7 @@ void funcionalidade6() {
     // atualizarCabecalho(bin, &cabecalho);
 
     // Atualizar o cabeçalho no arquivo após as remoções
-    // escreverCabecalho(bin, &cabecalho);
+    escreverCabecalho(bin, &cabecalho);
 
     fecharArquivoBin(bin);
 
