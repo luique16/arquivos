@@ -209,7 +209,7 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
             parEstacaoB[i] = INTEIRO_NULO;
             continue;
         }
-        
+
         nomesEstacoes[i] = reg.tamNomeEstacao > 0 ? strdup(reg.nomeEstacao) : NULL;
         parEstacaoA[i] = reg.codEstacao;
         parEstacaoB[i] = reg.codProxEstacao;
@@ -231,7 +231,7 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
         }
     }
  
-    /* Conta pares (A,B) distintos — (A,B) e (B,A) são o mesmo par */
+    /* Conta pares (A,B) distintos - (A,B) e (B,A) são o mesmo par */
     int contadorPares = 0;
     for (int i = 0; i < total; i++) {
         if (parEstacaoA[i] == INTEIRO_NULO || parEstacaoB[i] == INTEIRO_NULO) continue;

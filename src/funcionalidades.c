@@ -13,17 +13,20 @@
 #include <stdio.h>
 
 void funcionalidade1() {
+    /* Nomes dos arquivos */
     char nomeCSV[256];
     char nomeArquivo[256];
 
     scanf("%s %s", nomeCSV, nomeArquivo);
 
+    /* Abre o arquivo CSV */
     FILE *csv = fopen(nomeCSV, "r");
     if (csv == NULL) {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
 
+    /* Abre o arquivo binário */
     FILE *bin = abrirArquivoBin(nomeArquivo, "wb+");
     if (bin == NULL) {
         fclose(csv);
@@ -48,7 +51,7 @@ void funcionalidade1() {
     while (lerRegistroCSV(csv, &reg)) {
         escreverRegistro(bin, &reg, cabecalho.proxRRN);
         cabecalho.proxRRN++;
-        inicializarRegistro(&reg);
+        inicializarRegistro(&reg); /* Limpa registro para a próxima leitura */
     }
 
     /* Atualiza o nroEstacoes e nroParesEstacao no cabeçalho */
@@ -63,10 +66,12 @@ void funcionalidade1() {
 }
 
 void funcionalidade2() {
+    /* Nome do arquivo binário */
     char nomeArquivo[256];
 
     scanf("%s", nomeArquivo);
 
+    /* Abre o arquivo binário */
     FILE *bin = abrirArquivoBin(nomeArquivo, "rb");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -76,25 +81,27 @@ void funcionalidade2() {
     CabecalhoArquivo cabecalho;
     lerCabecalho(bin, &cabecalho);
 
+    /* Verifica se o arquivo está consistente */
     if (cabecalho.status == STATUS_INCONSISTENTE) {
         fclose(bin);
         printf("Falha no processamento do arquivo.\n");
         return;
     }
 
+    /* Percorre todos os registros sequencialmente */
     int encontrou = 0;
-
-    /* Percorre todos os RRNs sequencialmente */
     for (int rrn = 0; rrn < cabecalho.proxRRN; rrn++) {
         RegistroDados reg;
         lerRegistro(bin, &reg, rrn);
 
+        /* Ignora registros removidos */
         if (reg.removido == REGISTRO_ATIVO) {
             imprimirRegistro(&reg);
             encontrou = 1;
         }
     }
 
+    /* Imprime mensagem de erro se nenhum registro for encontrado */
     if (!encontrou) {
         printf("Registro inexistente.\n");
     }
@@ -172,9 +179,11 @@ void funcionalidade4() {
 }
 
 void funcionalidade5() {
+    /* Nome do arquivo binário */
     char nomeArquivo[256];
     scanf("%s", nomeArquivo);
 
+    /* Abre o arquivo binário */
     FILE *bin = abrirArquivoBin(nomeArquivo, "rb+");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -195,8 +204,10 @@ void funcionalidade5() {
         return;
     }
 
+    /* Marca o arquivo como inconsistente para realizar alterações */
     marcarInconsistente(bin);
 
+    /* Insere cada registro */
     for (int insercao = 0; insercao < n; insercao++) {
         RegistroDados novoReg;
         inicializarRegistro(&novoReg);
@@ -238,6 +249,7 @@ void funcionalidade5() {
 
         free(leitura);
 
+        /* Seleciona o RRN de destino (topo da pilha ou proximo RRN) */
         int rrnDestino;
 
         if (cabecalho.topo != INTEIRO_NULO) {
@@ -266,6 +278,7 @@ void funcionalidade5() {
     /* Cabeçalho não atualizado, pois é garantido que não haverá outra alteração em nroEstacoes e nroParesEstacao */
     // atualizarCabecalho(bin, &cabecalho);
 
+    /* Escreve cabeçalho e fecha consistentemente */
     escreverCabecalho(bin, &cabecalho);
     fecharArquivoBin(bin);
 
