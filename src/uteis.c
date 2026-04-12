@@ -126,7 +126,7 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
             }
         }
 
-        // Neste caso, devemos coletar os campos e os valores a serem atualizados antes de percorrer o arquivo
+        // Se for UPDATE, devemos coletar os campos e os valores a serem atualizados antes de percorrer o arquivo
         Validacao *atualizacoes = NULL;
         int qtdCampos = 0;
         if (acao == atualizarRegistro) {
