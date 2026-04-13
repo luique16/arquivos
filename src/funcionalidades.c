@@ -316,7 +316,7 @@ void funcionalidade6() {
     busca(bin, &cabecalho, n, atualizarRegistro);
 
     // Atualiza nroEstacoes e nroParesEstacao no cabeçalho
-    // atualizarCabecalho(bin, &cabecalho);
+    atualizarCabecalho(bin, &cabecalho);
 
     // Atualizar o cabeçalho no arquivo após as remoções
     escreverCabecalho(bin, &cabecalho);

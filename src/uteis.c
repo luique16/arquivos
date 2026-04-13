@@ -108,6 +108,7 @@ Validacao *getAtualizacoes(int qtdCampos) {
 void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, CabecalhoArquivo *c, RegistroDados *reg, int rrn, Validacao *atualizacoes, int qtdCampos)) {
     /* Executa n buscas consecutivas */
     for (int i = 0; i < n; i++) {
+        /* Recebe m validações (pares campo + valor) */
         int qtdValidacoes;
         scanf("%d", &qtdValidacoes);
 
