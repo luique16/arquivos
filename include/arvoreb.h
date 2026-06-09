@@ -1,6 +1,6 @@
 /**
  * @file arvoreb.h
- * @brief Definição constantes, estruturas de dados e TAD relacionados à árvore B.
+ * @brief Definição constantes, estruturas de dados e funções relacionados à árvore B.
  */
 
 #ifndef ARVOREB_H
@@ -42,7 +42,7 @@ typedef struct {
 typedef struct {
     int chave;      /* Chave de busca (-1 se estiver vazio)*/
     int offset;     /* Campo de referência para o registro no arquivo de dados que contém a chave de busca (-1 se estiver vazio) */
-} Indice;
+} Entrada;
 
 /**
  * @brief Registro(Nó/Página) de dados.
@@ -71,26 +71,14 @@ typedef struct {
     int  proximo;                       /* RRN do próximo removido na pilha (-1 se último) */
     int  tipoNo;                        /* Tipo do nó (NO_FOLHA, NO_RAIZ ou NO_INTERMEDIARIO) */
     int  nroChaves;                     /* Quantidade de chaves presentes no nó */
-    Indice indices[ORDEM_ARVB - 1];     /* Vetor com a capacidade máxima de pares (chave, referência), que é ORDEM_ARVB - 1 */
+    Entrada pares[ORDEM_ARVB - 1];      /* Vetor com a capacidade máxima de pares (chave, referência), que é ORDEM_ARVB - 1 */
     int descendentes[ORDEM_ARVB];       /* Vetor com a capacidade máxima de referências para sub-árvores (valor = -1 se não tiver sub-árvore) */
-} No;
+} Pagina;
 
-/**
- * @brief TAD da Árvore B.
- * 
- * Contém:
- *   Registro de cabeçalho (tamanho fixo de 17 bytes)
- *   Vetor de Registros que atuam como os nós da árvore B (no caso de ordem 4, tamanho fixo de 53 bytes de cada registro)
- */
-typedef struct
-{
-    CabecalhoArvB cabecalho;    /* Cabeçalho da árvore B */
-    No paginas[];               /* Vetor com as páginas (nós/registros) que compõem a árvore B */
-} ArvoreB;
-
-/* Funções relacionadas */
-ArvoreB * criarArvB();
-void lerArvB(FILE *fp);
-void gravarArvB(FILE *fp);
+/* Funções relacionadas às estruturas da árvore B */
+CabecalhoArvB * lerCabecalho(FILE *fp);
+Pagina * lerPagina(FILE *fp, int rrn);
+void gravarCabecalho(FILE *fp);
+void gravarPagina(FILE *fp, int rrn);
 
 #endif
