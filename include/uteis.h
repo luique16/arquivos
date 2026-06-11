@@ -7,7 +7,6 @@
 #define UTEIS_H
 
 #include "definicoes.h"
-
 #include <stdbool.h>
 
 /**
@@ -16,6 +15,13 @@
  * Imprime registros com campos possívelmente nulos na saída padrão.
  */
 void imprimirRegistro(RegistroDados *reg);
+
+/**
+ * @brief Imprime todos os registros ativos do arquivo
+ *
+ * Lê e imprime todos registros não-removidos do arquivo binário, uma linha por registro. Mensagem de erro se nenhum encontrado.
+ */
+void imprimirTodosRegistros(FILE *bin, CabecalhoArquivo *cabecalho);
 
 /**
  * @brief Estrutura para armazenar validações (where).

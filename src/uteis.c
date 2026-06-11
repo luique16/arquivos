@@ -33,6 +33,33 @@ void imprimirRegistro(RegistroDados *reg) {
     printf("\n");
 }
 
+/**
+ * @brief Imprime todos os registros ativos do arquivo binário.
+ *
+ * Percorre o arquivo sequencialmente e imprime apenas registros
+ * não removidos. Exibe "Registro inexistente." se nenhum for encontrado.
+ */
+void imprimirTodosRegistros(FILE *bin, CabecalhoArquivo *cabecalho) {
+    int encontrou = 0;
+    for (int rrn = 0; rrn < cabecalho->proxRRN; rrn++) {
+        /* Só lê registro se não for removido */
+        char removido;
+        fseek(bin, rrnParaOffset(rrn), SEEK_SET);
+        fread(&removido, sizeof(char), 1, bin);
+        if (removido == REGISTRO_REMOVIDO) continue;
+
+        RegistroDados reg;
+        fseek(bin, rrnParaOffset(rrn), SEEK_SET);
+        lerRegistro(bin, &reg, rrn);
+
+        imprimirRegistro(&reg);
+        encontrou = 1;
+    }
+    if (!encontrou) {
+        printf("Registro inexistente.\n");
+    }
+}
+
 void acaoImprimir(FILE *, CabecalhoArquivo *, RegistroDados *reg, int, Validacao *, int) {
     imprimirRegistro(reg);
 }
@@ -136,18 +163,25 @@ void busca(FILE *bin, CabecalhoArquivo *cabecalho, int n, void (*acao)(FILE *f, 
         }
 
         int encontrou = 0;
+        int buscaUnicaPorCodEstacao = (qtdValidacoes == 1 && strcmp(validacoes[0].campo, "codEstacao") == 0);
 
         /* Percorre todos os RRNs para esta busca */
         for (int rrn = 0; rrn < cabecalho->proxRRN; rrn++) {
-            RegistroDados reg;
-            lerRegistro(bin, &reg, rrn);
+            /* Só lê registro se não for removido */
+            char removido;
+            fseek(bin, rrnParaOffset(rrn), SEEK_SET);
+            fread(&removido, sizeof(char), 1, bin);
+            if (removido == REGISTRO_REMOVIDO) continue;
 
-            if (reg.removido == REGISTRO_REMOVIDO) continue;
+            RegistroDados reg;
+            fseek(bin, rrnParaOffset(rrn), SEEK_SET);
+            lerRegistro(bin, &reg, rrn);
 
             /* Executa validações */
             if (validarCampos(&reg, validacoes, qtdValidacoes)) {
                 acao(bin, cabecalho, &reg, rrn, atualizacoes, qtdCampos);
                 encontrou++;
+                if (buscaUnicaPorCodEstacao) break;
             }
         }
 
@@ -200,16 +234,21 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho) {
     int *parEstacaoB = malloc(sizeof(int)*total);
  
     /* Lê todos os registros, ignorando removidos */
-    RegistroDados reg;
     for (int i = 0; i < total; i++) {
-        lerRegistro(bin, &reg, i);
-        
-        if (reg.removido == REGISTRO_REMOVIDO) {
+        char removido;
+        fseek(bin, rrnParaOffset(i), SEEK_SET);
+        fread(&removido, sizeof(char), 1, bin);
+
+        if (removido == REGISTRO_REMOVIDO) {
             nomesEstacoes[i] = NULL;
             parEstacaoA[i] = INTEIRO_NULO;
             parEstacaoB[i] = INTEIRO_NULO;
             continue;
         }
+
+        RegistroDados reg;
+        fseek(bin, rrnParaOffset(i), SEEK_SET);
+        lerRegistro(bin, &reg, i);
 
         nomesEstacoes[i] = reg.tamNomeEstacao > 0 ? strdup(reg.nomeEstacao) : NULL;
         parEstacaoA[i] = reg.codEstacao;
