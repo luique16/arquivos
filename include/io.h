@@ -7,6 +7,7 @@
 #define IO_H
 
 #include "definicoes.h"
+#include "arvoreb.h"
 
 /**
  * @brief Calcula o byte offset de um registro a partir do seu RRN.
@@ -77,5 +78,44 @@ void lerRegistro(FILE *bin, RegistroDados *reg, int rrn);
  * @param reg Ponteiro para o registro a ser inicializado.
  */
 void inicializarRegistro(RegistroDados *reg);
+
+/* === árvore B === */
+
+/**
+ * @brief Converte RRN de nó da árvore-B em byte-offset absoluto.
+ * @param rrn RRN do nó.
+ * @return Byte offset no arquivo de índice.
+ */
+long calcularOffsetNo(int rrn);
+
+/**
+ * @brief Lê um nó (página) do arquivo de índice.
+ * @param fp Ponteiro para o arquivo de índice.
+ * @param rrn RRN do nó a ser lido.
+ * @return Pagina preenchida.
+ */
+Pagina lerNo(FILE *fp, int rrn);
+
+/**
+ * @brief Escreve um nó (página) no arquivo de índice.
+ * @param fp Ponteiro para o arquivo de índice.
+ * @param rrn RRN de destino.
+ * @param no Nó a ser escrito.
+ */
+void escreverNo(FILE *fp, int rrn, Pagina no);
+
+/**
+ * @brief Lê o cabeçalho do arquivo de índice.
+ * @param fp Ponteiro para o arquivo de índice.
+ * @return CabecalhoArvore lido.
+ */
+CabecalhoArvB lerCabecalhoArvB(FILE *fp);
+
+/**
+ * @brief Escreve o cabeçalho no arquivo de índice.
+ * @param fp Ponteiro para o arquivo de índice.
+ * @param cab Cabeçalho a ser escrito.
+ */
+void escreverCabecalhoArvB(FILE *fp, CabecalhoArvB cab);
 
 #endif

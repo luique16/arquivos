@@ -57,4 +57,36 @@ void funcionalidade5();
  * Atualiza os campos em questão dos registros encontrados pela busca.
  */
 void funcionalidade6();
+
+/**
+ * @brief [7] CREATE INDEX — Cria índice árvore-B para arquivo de dados.
+ *
+ * Lê o arquivo de dados e insere cada registro ativo no índice,
+ * usando codEstacao como chave de busca.
+ */
+void funcionalidade7();
+
+/**
+ * @brief [8] SELECT WITH INDEX — Busca registros usando índice.
+ *
+ * Se codEstacao for critério, usa índice para busca; caso contrário,
+ * faz busca sequencial. Exibe registros encontrados.
+ */
+void funcionalidade8();
+
+/**
+ * @brief [9] INSERT WITH INDEX — Insere registros e atualiza índice.
+ *
+ * Insere novos registros no arquivo de dados com reaproveitamento
+ * e insere as chaves no índice árvore-B.
+ */
+void funcionalidade9();
+
+/**
+ * @brief [10] DELETE WITH INDEX — Remove registros e atualiza índice.
+ *
+ * Remove logicamente registros que satisfaçam critérios e remove
+ * as chaves correspondentes do índice árvore-B.
+ */
+void funcionalidade10();
 #endif

@@ -40,6 +40,12 @@ int main(void) {
         case 6:
             funcionalidade6();
             break;
+        case 7:
+            funcionalidade7();
+            break;
+        case 8:
+            funcionalidade8();
+            break;
         default:
             fprintf(stderr, "Falha no processamento do arquivo.\n");
             return 1;

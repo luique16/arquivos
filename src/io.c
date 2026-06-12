@@ -137,3 +137,86 @@ void inicializarRegistro(RegistroDados *reg) {
     reg->tamNomeLinha = 0;
     reg->nomeLinha[0] = '\0';
 }
+
+/* === árvore B === */
+
+long calcularOffsetNo(int rrn) {
+    /* pula cabeçalho, depois calcula posição da página */
+    return (long)TAMANHO_CABECALHO_ARVB + (long)rrn * TAMANHO_PAGINA_DISCO;
+}
+
+Pagina lerNo(FILE *fp, int rrn) {
+    Pagina no;
+    long offset = calcularOffsetNo(rrn);
+    fseek(fp, offset, SEEK_SET);
+
+    /* campos de controle da página */
+    fread(&no.removido, sizeof(char), 1, fp);
+    fread(&no.proximo,  sizeof(int),  1, fp);
+    fread(&no.tipoNo,   sizeof(int),  1, fp);
+    fread(&no.nroChaves,sizeof(int),  1, fp);
+
+    /* pares (chave, offset) intercalados conforme layout do disco */
+    fread(&no.pares[0].chave,  sizeof(int), 1, fp);
+    fread(&no.pares[0].offset, sizeof(int), 1, fp);
+    fread(&no.pares[1].chave,  sizeof(int), 1, fp);
+    fread(&no.pares[1].offset, sizeof(int), 1, fp);
+    fread(&no.pares[2].chave,  sizeof(int), 1, fp);
+    fread(&no.pares[2].offset, sizeof(int), 1, fp);
+
+    /* descendentes P1..P4 */
+    fread(&no.descendentes[0], sizeof(int), 1, fp);
+    fread(&no.descendentes[1], sizeof(int), 1, fp);
+    fread(&no.descendentes[2], sizeof(int), 1, fp);
+    fread(&no.descendentes[3], sizeof(int), 1, fp);
+
+    return no;
+}
+
+void escreverNo(FILE *fp, int rrn, Pagina no) {
+    long offset = calcularOffsetNo(rrn);
+    fseek(fp, offset, SEEK_SET);
+
+    /* campos de controle */
+    fwrite(&no.removido, sizeof(char), 1, fp);
+    fwrite(&no.proximo,  sizeof(int),  1, fp);
+    fwrite(&no.tipoNo,   sizeof(int),  1, fp);
+    fwrite(&no.nroChaves,sizeof(int),  1, fp);
+
+    /* pares C1/PR1, C2/PR2, C3/PR3 */
+    fwrite(&no.pares[0].chave,  sizeof(int), 1, fp);
+    fwrite(&no.pares[0].offset, sizeof(int), 1, fp);
+    fwrite(&no.pares[1].chave,  sizeof(int), 1, fp);
+    fwrite(&no.pares[1].offset, sizeof(int), 1, fp);
+    fwrite(&no.pares[2].chave,  sizeof(int), 1, fp);
+    fwrite(&no.pares[2].offset, sizeof(int), 1, fp);
+
+    /* ponteiros P1..P4 */
+    fwrite(&no.descendentes[0], sizeof(int), 1, fp);
+    fwrite(&no.descendentes[1], sizeof(int), 1, fp);
+    fwrite(&no.descendentes[2], sizeof(int), 1, fp);
+    fwrite(&no.descendentes[3], sizeof(int), 1, fp);
+}
+
+CabecalhoArvB lerCabecalhoArvB(FILE *fp) {
+    CabecalhoArvB cab;
+    fseek(fp, 0, SEEK_SET);
+
+    fread(&cab.status,  sizeof(char), 1, fp);
+    fread(&cab.noRaiz,  sizeof(int),  1, fp);
+    fread(&cab.topo,    sizeof(int),  1, fp);
+    fread(&cab.proxRRN, sizeof(int),  1, fp);
+    fread(&cab.nroNos,  sizeof(int),  1, fp);
+
+    return cab;
+}
+
+void escreverCabecalhoArvB(FILE *fp, CabecalhoArvB cab) {
+    fseek(fp, 0, SEEK_SET);
+
+    fwrite(&cab.status,  sizeof(char), 1, fp);
+    fwrite(&cab.noRaiz,  sizeof(int),  1, fp);
+    fwrite(&cab.topo,    sizeof(int),  1, fp);
+    fwrite(&cab.proxRRN, sizeof(int),  1, fp);
+    fwrite(&cab.nroNos,  sizeof(int),  1, fp);
+}

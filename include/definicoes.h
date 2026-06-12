@@ -25,6 +25,12 @@
 #define REGISTRO_REMOVIDO    '1'
 #define REGISTRO_ATIVO       '0'
 
+/* Constantes da árvore-B (valores numéricos, sem dependências) */
+#define NULO_RRN             -1
+#define MAX_CHAVES           3
+#define MAX_FILHOS           4
+#define MIN_CHAVES_NAO_RAIZ  2
+
 /**
  * @brief Cabeçalho do arquivo binário (17 bytes fixos no disco).
  *

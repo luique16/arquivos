@@ -36,8 +36,10 @@ typedef struct {
 
 
 /**
- * Estrutura auxiliar que armazena uma chave de busca e um campo de referência para o registro no arquivo de dados que corresponde a essa chave.
- * Nesse caso, o campo de referência guarda o byte offset do registro no arquivo de dados.
+ * @brief Armazena uma chave de busca e a referência para o registro no
+ * arquivo de dados correspondente.
+ *
+ * O campo de referência guarda o byte offset do registro no arquivo de dados.
  */
 typedef struct {
     int chave;      /* Chave de busca (-1 se estiver vazio)*/
@@ -75,10 +77,192 @@ typedef struct {
     int descendentes[ORDEM_ARVB];       /* Vetor com a capacidade máxima de referências para sub-árvores (valor = -1 se não tiver sub-árvore) */
 } Pagina;
 
-/* Funções relacionadas às estruturas da árvore B */
-CabecalhoArvB * lerCabecalho(FILE *fp);
-Pagina * lerPagina(FILE *fp, int rrn);
-void gravarCabecalho(FILE *fp);
-void gravarPagina(FILE *fp, int rrn);
+/**
+ * @brief Resultado de split (para inserção).
+ */
+typedef struct {
+    int houveSplit;   /* 1 se houve split, 0 caso contrário */
+    int chaveSobe;    /* Chave promovida para o nó pai */
+    int prSobe;       /* Byte offset no arquivo de dados correspondente */
+    int rrnDireito;   /* RRN do novo nó criado à direita */
+} ResultadoSplit;
+
+/* === Funções de inicialização === */
+
+/**
+ * @brief Cria e retorna um nó com todos os campos no estado padrão.
+ * @return Pagina com campos zerados/inicializados.
+ */
+Pagina noVazio(void);
+
+/**
+ * @brief Cria o cabeçalho inicial para um arquivo de índice recém-criado.
+ * @return CabecalhoArvB com status '0' e demais campos zerados.
+ */
+CabecalhoArvB cabecalhoArvoreVazio(void);
+
+/**
+ * @brief Obtém o RRN para um novo nó, reaproveitando da pilha se possível.
+ * @param fp Ponteiro para o arquivo de índice.
+ * @param cab Ponteiro para o cabeçalho (atualiza topo/proxRRN).
+ * @return RRN do nó alocado.
+ */
+int alocarNo(FILE *fp, CabecalhoArvB *cab);
+
+/* === Funções de busca === */
+
+/**
+ * @brief Busca uma chave na árvore-B.
+ * @param fp     Ponteiro para o arquivo de índice.
+ * @param cab    Cabeçalho da árvore-B.
+ * @param chave  Chave a ser buscada.
+ * @param offsetEncontrado Ponteiro para armazenar o offset encontrado.
+ * @return 1 se encontrada, 0 caso contrário.
+ */
+int buscarNaArvore(FILE *fp, CabecalhoArvB cab, int chave, long *offsetEncontrado);
+
+/**
+ * @brief Encontra a sucessora imediata de uma chave não-folha.
+ * @param fp          Ponteiro para o arquivo de índice.
+ * @param rrnFilhoDir RRN do filho direito da chave.
+ * @param chaveSuc    Ponteiro para armazenar a chave sucessora.
+ * @param prSuc       Ponteiro para armazenar o PR da sucessora.
+ * @param rrnFolhaSuc Ponteiro para armazenar o RRN da folha onde está a sucessora.
+ */
+void encontrarSucessora(FILE *fp, int rrnFilhoDir, int *chaveSuc, int *prSuc, int *rrnFolhaSuc);
+
+/* === Funções de inserção === */
+
+/**
+ * @brief Insere uma chave em um nó que tem espaço disponível.
+ * @param no           Ponteiro para o nó.
+ * @param chave        Chave a ser inserida.
+ * @param pr           Byte offset no arquivo de dados.
+ * @param rrnFilhoDir  RRN do filho direito da chave.
+ */
+void inserirNaoPropagado(Pagina *no, int chave, int pr, int rrnFilhoDir);
+
+/**
+ * @brief Realiza o split de um nó cheio ao receber uma nova chave.
+ * @param fp                     Ponteiro para o arquivo de índice.
+ * @param cab                    Ponteiro para o cabeçalho.
+ * @param rrnEsq                 RRN do nó que sofrerá split.
+ * @param noEsq                  Nó que está cheio.
+ * @param novaChave              Nova chave a ser inserida.
+ * @param novoPR                 PR da nova chave.
+ * @param rrnFilhoDirDaNovaChave RRN do filho direito da nova chave.
+ * @return ResultadoSplit com dados da chave promovida.
+ */
+ResultadoSplit splitNo(FILE *fp, CabecalhoArvB *cab,
+                       int rrnEsq, Pagina noEsq,
+                       int novaChave, int novoPR, int rrnFilhoDirDaNovaChave);
+
+/**
+ * @brief Insere recursivamente uma chave na subárvore.
+ * @param fp       Ponteiro para o arquivo de índice.
+ * @param cab      Ponteiro para o cabeçalho.
+ * @param rrnAtual RRN do nó atual na recursão.
+ * @param chave    Chave a ser inserida.
+ * @param pr       Byte offset no arquivo de dados.
+ * @return ResultadoSplit indicando se houve promoção.
+ */
+ResultadoSplit inserirRecursivo(FILE *fp, CabecalhoArvB *cab,
+                                int rrnAtual, int chave, int pr);
+
+/**
+ * @brief Ponto de entrada público para inserção na árvore-B.
+ * @param fp    Ponteiro para o arquivo de índice.
+ * @param cab   Ponteiro para o cabeçalho.
+ * @param chave Chave a ser inserida.
+ * @param pr    Byte offset no arquivo de dados.
+ */
+void inserirNaArvore(FILE *fp, CabecalhoArvB *cab, int chave, int pr);
+
+/* === Funções de remoção === */
+
+/**
+ * @brief Retorna o índice do filho dentro do pai.
+ * @param pai      Nó pai.
+ * @param rrnFilho RRN do filho procurado.
+ * @return Índice do filho, ou -1 se não encontrado.
+ */
+int encontrarPosicaoFilho(Pagina pai, int rrnFilho);
+
+/**
+ * @brief Remove a chave na posição pos de um nó folha.
+ * @param no  Ponteiro para o nó folha.
+ * @param pos Índice da chave a remover.
+ */
+void removerDaFolha(Pagina *no, int pos);
+
+/**
+ * @brief Redistribui chaves do irmão direito para o filho em underflow.
+ * @param fp          Ponteiro para o arquivo de índice.
+ * @param pai         Ponteiro para o nó pai.
+ * @param posFilhoEsq Índice do filho em underflow no pai.
+ * @param filhoEsq    Ponteiro para o filho em underflow.
+ * @param rrnFilhoEsq RRN do filho em underflow.
+ * @param irmaoDir    Ponteiro para o irmão direito.
+ * @param rrnIrmaoDir RRN do irmão direito.
+ */
+void redistribuirDaDireita(FILE *fp, Pagina *pai, int posFilhoEsq,
+                           Pagina *filhoEsq, int rrnFilhoEsq,
+                           Pagina *irmaoDir, int rrnIrmaoDir);
+
+/**
+ * @brief Redistribui chaves do irmão esquerdo para o filho em underflow.
+ * @param fp          Ponteiro para o arquivo de índice.
+ * @param pai         Ponteiro para o nó pai.
+ * @param posFilhoDir Índice do filho em underflow no pai.
+ * @param filhoDir    Ponteiro para o filho em underflow.
+ * @param rrnFilhoDir RRN do filho em underflow.
+ * @param irmaoEsq    Ponteiro para o irmão esquerdo.
+ * @param rrnIrmaoEsq RRN do irmão esquerdo.
+ */
+void redistribuirDaEsquerda(FILE *fp, Pagina *pai, int posFilhoDir,
+                            Pagina *filhoDir, int rrnFilhoDir,
+                            Pagina *irmaoEsq, int rrnIrmaoEsq);
+
+/**
+ * @brief Concatena filho em underflow com irmão direito.
+ * @param fp          Ponteiro para o arquivo de índice.
+ * @param cab         Ponteiro para o cabeçalho.
+ * @param pai         Ponteiro para o nó pai.
+ * @param posFilhoEsq Índice do filho em underflow no pai.
+ * @param filhoEsq    Ponteiro para o filho em underflow.
+ * @param rrnFilhoEsq RRN do filho em underflow.
+ * @param irmaoDir    Ponteiro para o irmão direito.
+ * @param rrnIrmaoDir RRN do irmão direito.
+ */
+void concatenarComDireita(FILE *fp, CabecalhoArvB *cab,
+                          Pagina *pai, int posFilhoEsq,
+                          Pagina *filhoEsq, int rrnFilhoEsq,
+                          Pagina *irmaoDir, int rrnIrmaoDir);
+
+/**
+ * @brief Concatena filho em underflow com irmão esquerdo.
+ * @param fp          Ponteiro para o arquivo de índice.
+ * @param cab         Ponteiro para o cabeçalho.
+ * @param pai         Ponteiro para o nó pai.
+ * @param posFilhoDir Índice do filho em underflow no pai.
+ * @param filhoDir    Ponteiro para o filho em underflow.
+ * @param rrnFilhoDir RRN do filho em underflow.
+ * @param irmaoEsq    Ponteiro para o irmão esquerdo.
+ * @param rrnIrmaoEsq RRN do irmão esquerdo.
+ */
+void concatenarComEsquerda(FILE *fp, CabecalhoArvB *cab,
+                           Pagina *pai, int posFilhoDir,
+                           Pagina *filhoDir, int rrnFilhoDir,
+                           Pagina *irmaoEsq, int rrnIrmaoEsq);
+
+/**
+ * @brief Remove uma chave da árvore recursivamente, tratando underflow.
+ * @param fp       Ponteiro para o arquivo de índice.
+ * @param cab      Ponteiro para o cabeçalho.
+ * @param rrnAtual RRN do nó atual na recursão.
+ * @param chave    Chave a ser removida.
+ * @return 1 se removida com sucesso, 0 se não encontrada.
+ */
+int removerDaArvore(FILE *fp, CabecalhoArvB *cab, int chave);
 
 #endif
