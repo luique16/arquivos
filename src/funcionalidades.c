@@ -426,7 +426,7 @@ void funcionalidade8() {
     scanf("%s %s", nomeArquivoDados, nomeArquivoIndice);
 
     int n;
-    scanf("%d", &n);
+    scanf(" %d", &n);
 
     FILE *fpDados = fopen(nomeArquivoDados, "rb");
     if (fpDados == NULL) {
@@ -460,7 +460,7 @@ void funcionalidade8() {
     for (int buscaId = 0; buscaId < n; buscaId++) {
         /* lê critérios de validação */
         int qtdValidacoes;
-        scanf("%d", &qtdValidacoes);
+        scanf(" %d", &qtdValidacoes);
 
         Validacao *validacoes = malloc(qtdValidacoes * sizeof(Validacao));
         for (int c = 0; c < qtdValidacoes; c++) {
@@ -485,25 +485,9 @@ void funcionalidade8() {
                 long offset;
                 int chave = stringNulavelParaInteiro(validacoes[v].valor);
                 if (buscarNaArvore(fpIndice, cabIndice, chave, &offset)) {
-                    /* leitura manual do registro via offset do índice */
+                    int rrn = (int) (offset - TAMANHO_CABECALHO) / TAMANHO_REGISTRO; /* Converte offset para RRN para poder aproveitar a função lerRegistro */
                     RegistroDados reg;
-                    fseek(fpDados, offset, SEEK_SET);
-                    fread(&reg.removido, sizeof(char), 1, fpDados);
-                    fread(&reg.proximo, sizeof(int), 1, fpDados);
-                    fread(&reg.codEstacao, sizeof(int), 1, fpDados);
-                    fread(&reg.codLinha, sizeof(int), 1, fpDados);
-                    fread(&reg.codProxEstacao, sizeof(int), 1, fpDados);
-                    fread(&reg.distProxEstacao, sizeof(int), 1, fpDados);
-                    fread(&reg.codLinhaIntegra, sizeof(int), 1, fpDados);
-                    fread(&reg.codEstIntegra, sizeof(int), 1, fpDados);
-                    fread(&reg.tamNomeEstacao, sizeof(int), 1, fpDados);
-                    if (reg.tamNomeEstacao > 0)
-                        fread(reg.nomeEstacao, sizeof(char), reg.tamNomeEstacao, fpDados);
-                    reg.nomeEstacao[reg.tamNomeEstacao] = '\0';
-                    fread(&reg.tamNomeLinha, sizeof(int), 1, fpDados);
-                    if (reg.tamNomeLinha > 0)
-                        fread(reg.nomeLinha, sizeof(char), reg.tamNomeLinha, fpDados);
-                    reg.nomeLinha[reg.tamNomeLinha] = '\0';
+                    lerRegistro(fpDados, &reg, rrn);
 
                     if (reg.removido == REGISTRO_ATIVO && validarCampos(&reg, validacoes, qtdValidacoes)) {
                         imprimirRegistro(&reg);
