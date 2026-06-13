@@ -498,10 +498,26 @@ void funcionalidade8() {
             }
         }
 
-        /* sem índice: varredura sequencial */
+        /* sem índice: varredura sequencial com os critérios já lidos */
         if (!usouIndice) {
-            busca(fpDados, &cabDados, 1, acaoImprimir);
-            encontrou = 1;
+            int encontrados_seq = 0;
+            for (int rrn = 0; rrn < cabDados.proxRRN; rrn++) {
+                char removido;
+                long offset = rrnParaOffset(rrn);
+                fseek(fpDados, offset, SEEK_SET);
+                fread(&removido, sizeof(char), 1, fpDados);
+                if (removido == REGISTRO_REMOVIDO) continue;
+
+                RegistroDados reg;
+                fseek(fpDados, offset, SEEK_SET);
+                lerRegistro(fpDados, &reg, rrn);
+
+                if (validarCampos(&reg, validacoes, qtdValidacoes)) {
+                    imprimirRegistro(&reg);
+                    encontrados_seq = 1;
+                }
+            }
+            encontrou = encontrados_seq;
         }
 
         if (!encontrou) {
