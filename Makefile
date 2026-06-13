@@ -3,3 +3,6 @@ all:
 
 run:
 	./arquivos
+
+zip:
+	zip -r arquivos.zip ./include ./src Makefile
