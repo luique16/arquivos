@@ -330,3 +330,35 @@ void atualizarRegistro(FILE *bin, CabecalhoArquivo *, RegistroDados *reg, int rr
     atualizarCampos(reg, atualizacoes, qtdCampos);
     escreverRegistro(bin, reg, rrn); // Reescreve no arquivo o registro, que agora tem os valores atualizados
 }
+
+void lerRegistroStdin(RegistroDados *reg) {
+    inicializarRegistro(reg);
+
+    char *leitura = malloc(TAMANHO_MAX_NOME);
+
+    scanf("%s", leitura);
+    reg->codEstacao = stringNulavelParaInteiro(leitura);
+
+    ScanQuoteString(reg->nomeEstacao);
+    reg->tamNomeEstacao = strlen(reg->nomeEstacao);
+
+    scanf("%s", leitura);
+    reg->codLinha = stringNulavelParaInteiro(leitura);
+
+    ScanQuoteString(reg->nomeLinha);
+    reg->tamNomeLinha = strlen(reg->nomeLinha);
+
+    scanf("%s", leitura);
+    reg->codProxEstacao = stringNulavelParaInteiro(leitura);
+
+    scanf("%s", leitura);
+    reg->distProxEstacao = stringNulavelParaInteiro(leitura);
+
+    scanf("%s", leitura);
+    reg->codLinhaIntegra = stringNulavelParaInteiro(leitura);
+
+    scanf("%s", leitura);
+    reg->codEstIntegra = stringNulavelParaInteiro(leitura);
+
+    free(leitura);
+}

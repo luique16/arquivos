@@ -245,44 +245,7 @@ void funcionalidade5() {
     /* Insere cada registro */
     for (int insercao = 0; insercao < n; insercao++) {
         RegistroDados novoReg;
-        inicializarRegistro(&novoReg);
-
-        /* Lê dados do usuário */
-        char* leitura = malloc(TAMANHO_MAX_NOME);
-
-        /* codEstacao */
-        scanf("%s", leitura);
-        novoReg.codEstacao = stringNulavelParaInteiro(leitura);
-
-        /* nomeEstacao */
-        ScanQuoteString(novoReg.nomeEstacao);
-        novoReg.tamNomeEstacao = strlen(novoReg.nomeEstacao);
-
-        /* codLinha */
-        scanf("%s", leitura);
-        novoReg.codLinha = stringNulavelParaInteiro(leitura);
-
-        /* nomeLinha */
-        ScanQuoteString(novoReg.nomeLinha);
-        novoReg.tamNomeLinha = strlen(novoReg.nomeLinha);
-
-        /* codProxEstacao */
-        scanf("%s", leitura);
-        novoReg.codProxEstacao = stringNulavelParaInteiro(leitura);
-
-        /* distProxEstacao */
-        scanf("%s", leitura);
-        novoReg.distProxEstacao = stringNulavelParaInteiro(leitura);
-
-        /* codLinhaIntegra */
-        scanf("%s", leitura);
-        novoReg.codLinhaIntegra = stringNulavelParaInteiro(leitura);
-
-        /* codEstIntegra */
-        scanf("%s", leitura);
-        novoReg.codEstIntegra = stringNulavelParaInteiro(leitura);
-
-        free(leitura);
+        lerRegistroStdin(&novoReg);
 
         /* Seleciona o RRN de destino (topo da pilha ou proximo RRN) */
         int rrnDestino;
@@ -578,35 +541,7 @@ void funcionalidade9() {
 
     for (int i = 0; i < n; i++) {
         RegistroDados novoReg;
-        inicializarRegistro(&novoReg);
-
-        char *leitura = malloc(TAMANHO_MAX_NOME);
-
-        scanf("%s", leitura);
-        novoReg.codEstacao = stringNulavelParaInteiro(leitura);
-
-        ScanQuoteString(novoReg.nomeEstacao);
-        novoReg.tamNomeEstacao = strlen(novoReg.nomeEstacao);
-
-        scanf("%s", leitura);
-        novoReg.codLinha = stringNulavelParaInteiro(leitura);
-
-        ScanQuoteString(novoReg.nomeLinha);
-        novoReg.tamNomeLinha = strlen(novoReg.nomeLinha);
-
-        scanf("%s", leitura);
-        novoReg.codProxEstacao = stringNulavelParaInteiro(leitura);
-
-        scanf("%s", leitura);
-        novoReg.distProxEstacao = stringNulavelParaInteiro(leitura);
-
-        scanf("%s", leitura);
-        novoReg.codLinhaIntegra = stringNulavelParaInteiro(leitura);
-
-        scanf("%s", leitura);
-        novoReg.codEstIntegra = stringNulavelParaInteiro(leitura);
-
-        free(leitura);
+        lerRegistroStdin(&novoReg);
 
         /* verifica se codEstacao já existe no índice */
         if (novoReg.codEstacao != INTEIRO_NULO) {
