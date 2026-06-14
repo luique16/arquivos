@@ -88,4 +88,6 @@ void atualizarCabecalho(FILE *bin, CabecalhoArquivo *cabecalho);
  */
 void atualizarRegistro(FILE *bin, CabecalhoArquivo *, RegistroDados *reg, int rrn, Validacao *atualizacoes, int qtdCampos);
 
+void lerRegistroStdin(RegistroDados *reg);
+
 #endif
