@@ -42,7 +42,7 @@ int alocarNo(FILE *fp, CabecalhoArvB *cab) {
     return rrn;
 }
 
-static int buscarNo(FILE *fp, int rrnAtual, int chave, long *offsetEncontrado) {
+int buscarNo(FILE *fp, int rrnAtual, int chave, long *offsetEncontrado) {
     if (rrnAtual == NULO_RRN) return 0;  /* não encontrado */
 
     Pagina no = lerNo(fp, rrnAtual);
@@ -241,4 +241,103 @@ void inserirNaArvore(FILE *fp, CabecalhoArvB *cab, int chave, int pr) {
     }
 
     escreverCabecalhoArvB(fp, *cab);         /* atualiza cabeçalho no disco */
+}
+
+void removerDaFolha(Pagina *pagina, int pos) {
+    // shift para a esquerda a partir de pos
+    for (int i = pos; i + 1 < pagina->nroChaves; i++) {
+        pagina->pares[i] = pagina->pares[i+1];
+    }
+    // limpar a última posição que ficou duplicada
+    pagina->pares[pagina->nroChaves - 1].chave = -1;
+    pagina->pares[pagina->nroChaves - 1].offset = -1;
+    pagina->nroChaves--;
+}
+
+bool checkUnderflow(Pagina *no) {
+    return (no->nroChaves < (ORDEM_ARVB / 2) - 1);
+}
+
+int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pagina, int indiceFilhoComUnderflow) {
+    // A fazer
+}
+
+/* Função interna recursiva, trabalha a partir de um RRN */
+int removerRec(FILE *fp, CabecalhoArvB *cab, int rrnAtual, int alvo) {
+    if (rrnAtual == NULO_RRN) return REM_NAO_ENCONTRADO;
+
+    Pagina pagina = lerNo(fp, rrnAtual);
+
+    /* Busca linear pela chave na página atual */
+    int posEncontrado = -1;
+    int idFilhoASeguir = pagina.nroChaves; /* assume maior que todos (último filho) */
+    for (int i = 0; i < pagina.nroChaves; i++) {
+        if (pagina.pares[i].chave == alvo) {
+            posEncontrado = i;
+            break;
+        }
+        if (alvo < pagina.pares[i].chave) {
+            idFilhoASeguir = i;
+            break;
+        }
+    }
+
+    int resultado;
+
+    if (posEncontrado >= 0) {
+        /* Chave encontrada nesta página */
+        if (pagina.tipoNo == NO_FOLHA) {
+            /* Caso simples: remove direto da folha */
+            removerDaFolha(&pagina, posEncontrado);
+            escreverNo(fp, rrnAtual, pagina);
+            return checkUnderflow(&pagina) ? REM_UNDERFLOW : REM_OK;
+        } else {
+            /* Nó interno: substitui pelo sucessor imediato */
+            Entrada valoresSuc;
+            int rrnFolhaSuc;
+            encontrarSucessora(fp, pagina.descendentes[posEncontrado + 1], &valoresSuc.chave, &valoresSuc.offset, &rrnFolhaSuc);
+
+            /* Remove o sucessor recursivamente */
+            resultado = removerRec(fp, cab, pagina.descendentes[posEncontrado + 1], valoresSuc.chave);
+
+            /* Recarrega a página pois a recursão pode ter alterado o disco */
+            pagina = lerNo(fp, rrnAtual);
+            pagina.pares[posEncontrado] = valoresSuc; /* Atualiza o valor do alvo pelo do sucessor que foi removido (essencialmente a mesma coisa que trocar os dois e remove o alvo) */
+
+            /* Trata underflow no filho à direita do separador, se necessário */
+            if (resultado == REM_UNDERFLOW) {
+                resultado = tratarUnderflow(fp, cab, &pagina, posEncontrado + 1);
+            }
+
+            escreverNo(fp, rrnAtual, pagina);
+            return checkUnderflow(&pagina) ? REM_UNDERFLOW : REM_OK;
+        }
+    } else {
+        /* Chave não encontrada aqui, desce para o filho adequado */
+        resultado = removerRec(fp, cab, pagina.descendentes[idFilhoASeguir], alvo);
+
+        if (resultado == REM_UNDERFLOW) {
+            /* Recarrega a página pois a recursão pode ter alterado o disco */
+            pagina = lerNo(fp, rrnAtual);
+            resultado = tratarUnderflow(fp, cab, &pagina, idFilhoASeguir);
+            escreverNo(fp, rrnAtual, pagina);
+        }
+
+        return resultado;
+    }
+}
+
+/* Função principal, ponto de entrada */
+int removerDaArvore(FILE *fp, CabecalhoArvB *cab, int alvo) {
+    int resultado = removerRec(fp, cab, cab->noRaiz, alvo);
+
+    /* Caso especial: raiz ficou vazia após fusão */
+    if (resultado == REM_UNDERFLOW) {
+        Pagina raiz = lerNo(fp, cab->noRaiz);
+        if (raiz.nroChaves == 0 && raiz.tipoNo != NO_FOLHA) {
+            cab->noRaiz = raiz.descendentes[0];
+        }
+    }
+
+    return (resultado != REM_NAO_ENCONTRADO);
 }

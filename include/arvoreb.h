@@ -7,6 +7,7 @@
 #define ARVOREB_H
 
 #include <stdio.h>
+#include <stdbool.h>
 
 /* Constantes */
 #define TAMANHO_CABECALHO_ARVB  17
@@ -15,6 +16,9 @@
 #define NO_FOLHA                -1
 #define NO_RAIZ                 0
 #define NO_INTERMEDIARIO        1
+#define REM_NAO_ENCONTRADO  0
+#define REM_OK              1
+#define REM_UNDERFLOW       2
 
 /**
  * @brief Cabeçalho do arquivo da árvore B (17 bytes fixos no disco).
@@ -86,6 +90,15 @@ typedef struct {
     int prSobe;       /* Byte offset no arquivo de dados correspondente */
     int rrnDireito;   /* RRN do novo nó criado à direita */
 } ResultadoSplit;
+
+/**
+ * @brief struct para armazenar o par da página pai e o filho seguido (para ser usado na remoção como uma pilha que guarda o caminho seguido)
+ */
+typedef struct {
+    int rrnPagina; /* O nó em que estava */
+    int indiceFilho; /* O índice i de pagina.descendentes[i], o filho para o qual foi seguido */
+} EntradaCaminho;
+
 
 /* === Funções de inicialização === */
 
@@ -194,6 +207,11 @@ int encontrarPosicaoFilho(Pagina pai, int rrnFilho);
  * @param pos Índice da chave a remover.
  */
 void removerDaFolha(Pagina *no, int pos);
+
+/**
+ * @brief Checa se tem underflow
+ */
+bool checkUnderflow(Pagina *no);
 
 /**
  * @brief Redistribui chaves do irmão direito para o filho em underflow.
