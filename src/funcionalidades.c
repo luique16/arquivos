@@ -392,7 +392,7 @@ void funcionalidade7() {
     }
 
     CabecalhoArvB cabIndice = cabecalhoArvoreVazio();
-    cabIndice.status = '0';      /* inconsistente durante construção */
+    cabIndice.status = STATUS_INCONSISTENTE;      /* inconsistente durante construção */
     escreverCabecalhoArvB(fpIndice, cabIndice);
 
     for (int rrn = 0; rrn < cabDados.proxRRN; rrn++) {
@@ -412,7 +412,7 @@ void funcionalidade7() {
         inserirNaArvore(fpIndice, &cabIndice, reg.codEstacao, pr);
     }
 
-    cabIndice.status = '1';      /* marca como consistente */
+    cabIndice.status = STATUS_CONSISTENTE;      /* marca como consistente */
     escreverCabecalhoArvB(fpIndice, cabIndice);
     fclose(fpIndice);
     fclose(fpDados);
@@ -540,4 +540,114 @@ void funcionalidade8() {
     fclose(fpDados);
 }
 
+void funcionalidade9() {
+    char nomeArquivoDados[256];
+    char nomeArquivoIndice[256];
+    scanf("%s %s", nomeArquivoDados, nomeArquivoIndice);
 
+    int n;
+    scanf("%d", &n);
+
+    FILE *fpDados = fopen(nomeArquivoDados, "r+b");
+    if (fpDados == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    CabecalhoArquivo cabDados;
+    lerCabecalho(fpDados, &cabDados);
+    if (cabDados.status == STATUS_INCONSISTENTE) {
+        fclose(fpDados);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    marcarInconsistente(fpDados);
+
+    FILE *fpIndice = fopen(nomeArquivoIndice, "r+b");
+
+    CabecalhoArvB cabIndice;
+    cabIndice = lerCabecalhoArvB(fpIndice);
+    if (cabIndice.status == STATUS_INCONSISTENTE) {
+        fclose(fpDados);
+        fclose(fpIndice);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    cabIndice.status = STATUS_INCONSISTENTE;
+    escreverCabecalhoArvB(fpIndice, cabIndice);
+
+    for (int i = 0; i < n; i++) {
+        RegistroDados novoReg;
+        inicializarRegistro(&novoReg);
+
+        char *leitura = malloc(TAMANHO_MAX_NOME);
+
+        scanf("%s", leitura);
+        novoReg.codEstacao = stringNulavelParaInteiro(leitura);
+
+        ScanQuoteString(novoReg.nomeEstacao);
+        novoReg.tamNomeEstacao = strlen(novoReg.nomeEstacao);
+
+        scanf("%s", leitura);
+        novoReg.codLinha = stringNulavelParaInteiro(leitura);
+
+        ScanQuoteString(novoReg.nomeLinha);
+        novoReg.tamNomeLinha = strlen(novoReg.nomeLinha);
+
+        scanf("%s", leitura);
+        novoReg.codProxEstacao = stringNulavelParaInteiro(leitura);
+
+        scanf("%s", leitura);
+        novoReg.distProxEstacao = stringNulavelParaInteiro(leitura);
+
+        scanf("%s", leitura);
+        novoReg.codLinhaIntegra = stringNulavelParaInteiro(leitura);
+
+        scanf("%s", leitura);
+        novoReg.codEstIntegra = stringNulavelParaInteiro(leitura);
+
+        free(leitura);
+
+        /* verifica se codEstacao já existe no índice */
+        if (novoReg.codEstacao != INTEIRO_NULO) {
+            long offsetExistente;
+            if (buscarNaArvore(fpIndice, cabIndice, novoReg.codEstacao, &offsetExistente)) {
+                continue;  /* chave já existe: não insere */
+            }
+        }
+
+        int rrnDestino;
+        if (cabDados.topo != INTEIRO_NULO) {
+            rrnDestino = cabDados.topo;
+            RegistroDados regRemovido;
+            lerRegistro(fpDados, &regRemovido, rrnDestino);
+            cabDados.topo = regRemovido.proximo;
+        } else {
+            rrnDestino = cabDados.proxRRN;
+            cabDados.proxRRN++;
+        }
+
+        if (novoReg.codEstacao != INTEIRO_NULO && novoReg.codProxEstacao != INTEIRO_NULO) {
+            cabDados.nroParesEstacao++;
+        }
+
+        novoReg.removido = REGISTRO_ATIVO;
+        novoReg.proximo  = INTEIRO_NULO;
+
+        int offset = (int)rrnParaOffset(rrnDestino);
+        escreverRegistro(fpDados, &novoReg, rrnDestino);
+
+        inserirNaArvore(fpIndice, &cabIndice, novoReg.codEstacao, offset);
+    }
+
+    atualizarCabecalho(fpDados, &cabDados);
+    escreverCabecalho(fpDados, &cabDados);
+    fecharArquivoBin(fpDados);
+
+    cabIndice.status = STATUS_CONSISTENTE;
+    escreverCabecalhoArvB(fpIndice, cabIndice);
+    fclose(fpIndice);
+
+    BinarioNaTela(nomeArquivoDados);
+    BinarioNaTela(nomeArquivoIndice);
+}
