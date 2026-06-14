@@ -704,11 +704,11 @@ void funcionalidade10() {
                 char removido;
                 long offset = rrnParaOffset(rrn);
                 fseek(fpDados, offset, SEEK_SET);
-                fread(&removido, sizeof(char), 1, fpDados);
+                fread(&removido, sizeof(char), 1, fpDados); // Ler o byte para checar se está removido
                 if (removido == REGISTRO_REMOVIDO) continue;
 
                 RegistroDados reg;
-                fseek(fpDados, offset, SEEK_SET);
+                // fseek(fpDados, offset, SEEK_SET); lerRegistro já faz o fseek absoluto internamente
                 lerRegistro(fpDados, &reg, rrn);
 
                 if (validarCampos(&reg, validacoes, qtdValidacoes)) {
@@ -735,9 +735,13 @@ void funcionalidade10() {
 
     /* Atualizar os cabeçalhos */
     escreverCabecalho(fpDados, &cabDados);
-    escreverCabecalhoArvB(fpDados, cabIndice);
+    escreverCabecalhoArvB(fpIndice, cabIndice);
+
+    /* Fechar os arquivos */
+    fclose(fpDados);
+    fclose(fpIndice);
 
     /* Mostrar os binários na tela */
-    BinarioNaTela(fpDados);
-    BinarioNaTela(fpIndice);
+    BinarioNaTela(nomeArquivoDados);
+    BinarioNaTela(nomeArquivoIndice);
 }
