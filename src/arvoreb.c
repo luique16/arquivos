@@ -255,11 +255,166 @@ void removerDaFolha(Pagina *pagina, int pos) {
 }
 
 bool checkUnderflow(Pagina *no) {
-    return (no->nroChaves < (ORDEM_ARVB / 2) - 1);
+    return (no->nroChaves < MINIMO_CHAVES);
 }
 
-int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pagina, int indiceFilhoComUnderflow) {
-    // A fazer
+/* Recebe o indice do filho à esquerda, que será redistribuido com o da sua direita */
+void redistribuir(FILE *fp, Pagina *pai, int indiceFilhoEsq) {
+    Pagina filhoEsq = lerNo(fp, pai->descendentes[indiceFilhoEsq]);
+    Pagina filhoDir = lerNo(fp, pai->descendentes[indiceFilhoEsq + 1]);
+
+    /* Juntar todas as chaves e descendentes em arrays temporarios */
+    int totalChaves = filhoEsq.nroChaves + 1 + filhoDir.nroChaves;
+    Entrada chaves[totalChaves];
+    int totalDesc = totalChaves + 1; /* Um descendente a mais do que nroChaves */
+    int descendentes[totalDesc];
+    /* Adicionar as chaves do filho da esquerda */
+    int i = 0;
+    for (i; i < filhoEsq.nroChaves; i++) {
+        chaves[i] = filhoEsq.pares[i];
+        descendentes[i] = filhoEsq.descendentes[i]; /* Insere o descendente da esquerda */
+    }
+    /* Adicionar a chave separadora e o último descendente de filhoEsq */
+    chaves[i] = pai->pares[indiceFilhoEsq];
+    descendentes[i] = filhoEsq.descendentes[i];
+    i++;
+    /* Adicionar as chaves do filho da direita */
+    for (int j = 0; j < filhoDir.nroChaves; i++, j++) {
+        chaves[i] = filhoDir.pares[j];
+        descendentes[i] = filhoDir.descendentes[j]; /* Insere o descendente da esquerda */
+    }
+    /* Adicionar o último descendente do filhoDir */
+    descendentes[i] = filhoDir.descendentes[filhoDir.nroChaves];
+
+    /* Distruibuir o mais igualmente possível */
+    int meio = totalChaves / 2; /* índice do meio, pega o menor da direita */
+
+    /* Reconstruindo filhoEsq com as primeiras nEsq chaves*/
+    for (int i = 0; i < meio; i++) {
+        filhoEsq.pares[i] = chaves[i];
+        filhoEsq.descendentes[i] = descendentes[i];
+    }
+
+    /* Último descendente da esquerda e sobe o promovido */
+    filhoEsq.descendentes[meio] = descendentes[meio];
+    pai->pares[indiceFilhoEsq] = chaves[meio];
+
+    /* Reconstruindo filhoDir com as chaves de meio+1 até a última */
+    int nDir = 0;
+    for (int i = meio+1; i < totalChaves; i++, nDir++) {
+        filhoDir.pares[nDir] = chaves[i];
+        filhoDir.descendentes[nDir] = descendentes[i];
+    }
+
+    /* Último descendente da direita */
+    filhoDir.descendentes[nDir] = descendentes[totalChaves];
+
+    /* Atualizar os nroChaves */
+    filhoEsq.nroChaves = meio;
+    filhoDir.nroChaves = totalChaves - meio - 1;
+
+    /* Limpar as posições antigas (se um dos filhos ficou menor do que antes) */
+    for (int i = filhoDir.nroChaves; i < ORDEM_ARVB - 1; i++) {
+        filhoDir.pares[i].chave  = -1;
+        filhoDir.pares[i].offset = -1;
+        filhoDir.descendentes[i + 1] = NULO_RRN;
+    }
+
+    for (int i = filhoEsq.nroChaves; i < ORDEM_ARVB - 1; i++) {
+        filhoEsq.pares[i].chave  = -1;
+        filhoEsq.pares[i].offset = -1;
+        filhoEsq.descendentes[i + 1] = NULO_RRN;
+    }
+
+    /* Escrever os filhos no disco, o pai é escrito no chamaor */
+    escreverNo(fp, pai->descendentes[indiceFilhoEsq], filhoEsq);
+    escreverNo(fp, pai->descendentes[indiceFilhoEsq+1], filhoDir);
+
+    return;
+}
+
+void removerLogicPagina(FILE *fp, CabecalhoArvB *cab, int rrn) {
+    // Falta implementar
+}
+
+/* Recebe o índice do filho à esquerda, que será concatenado com o da sua direita (o da direita será destruído) */
+void concatenarFilhos(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoEsq) {
+    Pagina filhoEsq = lerNo(fp, pai->descendentes[indiceFilhoEsq]);
+    Pagina filhoDir = lerNo(fp, pai->descendentes[indiceFilhoEsq+1]);
+
+    int i = filhoEsq.nroChaves;
+
+    /* Descer o separador do pai para o filho da esquerda */
+    filhoEsq.pares[i] = pai->pares[indiceFilhoEsq];
+    i++;
+
+    /* Copiar chaves e descendentes de filhoDir para filhoEsq */
+    for (int j = 0; j < filhoDir.nroChaves; j++, i++) {
+        filhoEsq.pares[i] = filhoDir.pares[j];
+        filhoEsq.descendentes[i] = filhoDir.descendentes[j]; /* Copia também o descendente da esquerda do atual*/
+    }
+    /* Último descendente do filhoDir */
+    filhoEsq.descendentes[i] = filhoDir.descendentes[filhoDir.nroChaves];
+
+    filhoEsq.nroChaves = i; /* Atualizar o nroChaves */
+
+    /* Remover (por shiftada para esquerda) o separador do pai e o ponteiro para filhoDir */
+    for (int j = indiceFilhoEsq; j < pai->nroChaves - 1; j++) {
+        pai->pares[j] = pai->pares[j+1];
+        pai->descendentes[j+1] = pai->descendentes[j+2];
+    }
+    /* Limpar os valores que ficaram no final */
+    pai->pares[pai->nroChaves - 1].chave   = -1;
+    pai->pares[pai->nroChaves - 1].offset  = -1;
+    pai->descendentes[pai->nroChaves]      = NULO_RRN;
+    pai->nroChaves--;
+
+    /* Remover logicamente o nó do filhoDir */
+    removerLogicPagina(fp, cab, pai->descendentes[indiceFilhoEsq+1]);
+
+    /* Escrever o novo nó de filhoEsq, o pai é escrito pelo chamador */
+    escreverNo(fp, pai->descendentes[indiceFilhoEsq], filhoEsq);
+}
+
+int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoComUnderflow) {
+    /* Tentar redistribuir pelo irmão da esquerda */
+    if (indiceFilhoComUnderflow > 0) {
+        /* Ler só o nroChaves do irmão da esquerda(para não precisar carregar a página inteira ainda) */
+        int nroChavesIrmEsq;
+        fseek(fp, rrnParaOffset(pai->descendentes[indiceFilhoComUnderflow-1]) /* início da página */ + 1*sizeof(char) /* removido */ + 2*sizeof(int) /* proximo, tipoNo */, SEEK_SET);
+        fread(&nroChavesIrmEsq, sizeof(int), 1, fp);
+
+        /* Se tem uma chave sobrando */
+        if (nroChavesIrmEsq >= MINIMO_CHAVES + 1) {
+            redistribuir(fp, pai, pai->descendentes[indiceFilhoComUnderflow-1]);
+            return REM_OK;
+        }
+    }
+
+    /* Tentar redistribuir pelo irmão da direita */
+    if (indiceFilhoComUnderflow < pai->nroChaves) {
+        /* Ler só o nroChaves do irmão da esquerda(para não precisar carregar a página inteira ainda) */
+        int nroChavesIrmDir;
+        fseek(fp, rrnParaOffset(pai->descendentes[indiceFilhoComUnderflow]) /* início da página */ + 1*sizeof(char) /* removido */ + 2*sizeof(int) /* proximo, tipoNo */, SEEK_SET);
+        fread(&nroChavesIrmDir, sizeof(int), 1, fp);
+
+        /* Se tem uma chave sobrando */
+        if (nroChavesIrmDir >= MINIMO_CHAVES + 1) {
+            redistribuir(fp, pai, pai->descendentes[indiceFilhoComUnderflow]);
+            return REM_OK;
+        }
+    }
+
+    /* Não redistribuiu: aplica concatenação */
+    if (indiceFilhoComUnderflow > 0) {
+        /* concatena com o irmão da esquerda */
+    }
+    else if (indiceFilhoComUnderflow < pai->nroChaves) {
+        /* concatena com o irmão da direita */
+    }
+
+    /* checar se o pai perdeu uma chave na concatenação e subir na recursão */
+    return checkUnderflow(pai) ? REM_UNDERFLOW : REM_OK;
 }
 
 /* Função interna recursiva, trabalha a partir de um RRN */

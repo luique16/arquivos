@@ -16,9 +16,10 @@
 #define NO_FOLHA                -1
 #define NO_RAIZ                 0
 #define NO_INTERMEDIARIO        1
-#define REM_NAO_ENCONTRADO  0
-#define REM_OK              1
-#define REM_UNDERFLOW       2
+#define MINIMO_CHAVES           ((ORDEM_ARVB / 2) - 1)
+#define REM_NAO_ENCONTRADO      0
+#define REM_OK                  1
+#define REM_UNDERFLOW           2
 
 /**
  * @brief Cabeçalho do arquivo da árvore B (17 bytes fixos no disco).
@@ -237,9 +238,7 @@ void redistribuirDaDireita(FILE *fp, Pagina *pai, int posFilhoEsq,
  * @param irmaoEsq    Ponteiro para o irmão esquerdo.
  * @param rrnIrmaoEsq RRN do irmão esquerdo.
  */
-void redistribuirDaEsquerda(FILE *fp, Pagina *pai, int posFilhoDir,
-                            Pagina *filhoDir, int rrnFilhoDir,
-                            Pagina *irmaoEsq, int rrnIrmaoEsq);
+void redistribuirDaEsquerda(FILE *fp, Pagina *pai, int indiceFilhoDir, int indiceFilhoEsq);
 
 /**
  * @brief Concatena filho em underflow com irmão direito.
