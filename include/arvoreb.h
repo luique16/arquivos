@@ -224,21 +224,7 @@ bool checkUnderflow(Pagina *no);
  * @param irmaoDir    Ponteiro para o irmão direito.
  * @param rrnIrmaoDir RRN do irmão direito.
  */
-void redistribuirDaDireita(FILE *fp, Pagina *pai, int posFilhoEsq,
-                           Pagina *filhoEsq, int rrnFilhoEsq,
-                           Pagina *irmaoDir, int rrnIrmaoDir);
-
-/**
- * @brief Redistribui chaves do irmão esquerdo para o filho em underflow.
- * @param fp          Ponteiro para o arquivo de índice.
- * @param pai         Ponteiro para o nó pai.
- * @param posFilhoDir Índice do filho em underflow no pai.
- * @param filhoDir    Ponteiro para o filho em underflow.
- * @param rrnFilhoDir RRN do filho em underflow.
- * @param irmaoEsq    Ponteiro para o irmão esquerdo.
- * @param rrnIrmaoEsq RRN do irmão esquerdo.
- */
-void redistribuirDaEsquerda(FILE *fp, Pagina *pai, int indiceFilhoDir, int indiceFilhoEsq);
+void redistribuir(FILE *fp, Pagina *pai, int indiceFilhoEsq);
 
 /**
  * @brief Concatena filho em underflow com irmão direito.
@@ -251,26 +237,7 @@ void redistribuirDaEsquerda(FILE *fp, Pagina *pai, int indiceFilhoDir, int indic
  * @param irmaoDir    Ponteiro para o irmão direito.
  * @param rrnIrmaoDir RRN do irmão direito.
  */
-void concatenarComDireita(FILE *fp, CabecalhoArvB *cab,
-                          Pagina *pai, int posFilhoEsq,
-                          Pagina *filhoEsq, int rrnFilhoEsq,
-                          Pagina *irmaoDir, int rrnIrmaoDir);
-
-/**
- * @brief Concatena filho em underflow com irmão esquerdo.
- * @param fp          Ponteiro para o arquivo de índice.
- * @param cab         Ponteiro para o cabeçalho.
- * @param pai         Ponteiro para o nó pai.
- * @param posFilhoDir Índice do filho em underflow no pai.
- * @param filhoDir    Ponteiro para o filho em underflow.
- * @param rrnFilhoDir RRN do filho em underflow.
- * @param irmaoEsq    Ponteiro para o irmão esquerdo.
- * @param rrnIrmaoEsq RRN do irmão esquerdo.
- */
-void concatenarComEsquerda(FILE *fp, CabecalhoArvB *cab,
-                           Pagina *pai, int posFilhoDir,
-                           Pagina *filhoDir, int rrnFilhoDir,
-                           Pagina *irmaoEsq, int rrnIrmaoEsq);
+void concatenarFilhos(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoEsq);
 
 /**
  * @brief Remove uma chave da árvore recursivamente, tratando underflow.

@@ -334,13 +334,30 @@ void redistribuir(FILE *fp, Pagina *pai, int indiceFilhoEsq) {
 }
 
 void removerLogicPagina(FILE *fp, CabecalhoArvB *cab, int rrn) {
-    // Falta implementar
+    int removido = REGISTRO_REMOVIDO;
+
+    //atualizar os valores relacionados à pilha dos removidos
+    int proximo = cab->topo;
+    cab->topo = rrn;
+
+    //atualizar o início da página no arquivo, não compensa usar escreverNo para mudar apenas os campos iniciais
+    long offsetInicio = rrnParaOffset(rrn);
+    fseek(fp, offsetInicio, SEEK_SET);
+    fwrite(&removido, sizeof(char), 1, fp);
+    fwrite(&proximo, sizeof(int), 1, fp);
+
+    //atualizar o nroNos no cabeçalho
+    cab->nroNos--;
+
+    return;
 }
 
 /* Recebe o índice do filho à esquerda, que será concatenado com o da sua direita (o da direita será destruído) */
 void concatenarFilhos(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoEsq) {
-    Pagina filhoEsq = lerNo(fp, pai->descendentes[indiceFilhoEsq]);
-    Pagina filhoDir = lerNo(fp, pai->descendentes[indiceFilhoEsq+1]);
+    int rrnEsq = pai->descendentes[indiceFilhoEsq];
+    int rrnDir = pai->descendentes[indiceFilhoEsq+1];
+    Pagina filhoEsq = lerNo(fp, rrnEsq);
+    Pagina filhoDir = lerNo(fp, rrnDir);
 
     int i = filhoEsq.nroChaves;
 
@@ -370,13 +387,14 @@ void concatenarFilhos(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilho
     pai->nroChaves--;
 
     /* Remover logicamente o nó do filhoDir */
-    removerLogicPagina(fp, cab, pai->descendentes[indiceFilhoEsq+1]);
+    removerLogicPagina(fp, cab, rrnDir);
 
     /* Escrever o novo nó de filhoEsq, o pai é escrito pelo chamador */
     escreverNo(fp, pai->descendentes[indiceFilhoEsq], filhoEsq);
 }
 
 int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoComUnderflow) {
+    fprintf(stderr, "tratarUnderflow: indiceFilho=%d pai->nroChaves=%d\n", indiceFilhoComUnderflow, pai->nroChaves);
     /* Tentar redistribuir pelo irmão da esquerda */
     if (indiceFilhoComUnderflow > 0) {
         /* Ler só o nroChaves do irmão da esquerda(para não precisar carregar a página inteira ainda) */
@@ -386,7 +404,7 @@ int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoCo
 
         /* Se tem uma chave sobrando */
         if (nroChavesIrmEsq >= MINIMO_CHAVES + 1) {
-            redistribuir(fp, pai, pai->descendentes[indiceFilhoComUnderflow-1]);
+            redistribuir(fp, pai, indiceFilhoComUnderflow - 1);
             return REM_OK;
         }
     }
@@ -400,7 +418,7 @@ int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoCo
 
         /* Se tem uma chave sobrando */
         if (nroChavesIrmDir >= MINIMO_CHAVES + 1) {
-            redistribuir(fp, pai, pai->descendentes[indiceFilhoComUnderflow]);
+            redistribuir(fp, pai, indiceFilhoComUnderflow);
             return REM_OK;
         }
     }
@@ -408,9 +426,10 @@ int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoCo
     /* Não redistribuiu: aplica concatenação */
     if (indiceFilhoComUnderflow > 0) {
         /* concatena com o irmão da esquerda */
-    }
-    else if (indiceFilhoComUnderflow < pai->nroChaves) {
+        concatenarFilhos(fp, cab, pai, indiceFilhoComUnderflow - 1);
+    } else {
         /* concatena com o irmão da direita */
+        concatenarFilhos(fp, cab, pai, indiceFilhoComUnderflow);
     }
 
     /* checar se o pai perdeu uma chave na concatenação e subir na recursão */
@@ -419,6 +438,7 @@ int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoCo
 
 /* Função interna recursiva, trabalha a partir de um RRN */
 int removerRec(FILE *fp, CabecalhoArvB *cab, int rrnAtual, int alvo) {
+    fprintf(stderr, "removerRec: rrnAtual=%d alvo=%d\n", rrnAtual, alvo);
     if (rrnAtual == NULO_RRN) return REM_NAO_ENCONTRADO;
 
     Pagina pagina = lerNo(fp, rrnAtual);
@@ -489,9 +509,12 @@ int removerDaArvore(FILE *fp, CabecalhoArvB *cab, int alvo) {
     /* Caso especial: raiz ficou vazia após fusão */
     if (resultado == REM_UNDERFLOW) {
         Pagina raiz = lerNo(fp, cab->noRaiz);
+        int rrnRaizAntiga = cab->noRaiz;
         if (raiz.nroChaves == 0 && raiz.tipoNo != NO_FOLHA) {
             cab->noRaiz = raiz.descendentes[0];
         }
+        if (rrnRaizAntiga != NULO_RRN)
+            removerLogicPagina(fp, cab, rrnRaizAntiga);
     }
 
     return (resultado != REM_NAO_ENCONTRADO);
