@@ -429,7 +429,6 @@ int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoCo
 
 /* Função interna recursiva, trabalha a partir de um RRN */
 int removerRec(FILE *fp, CabecalhoArvB *cab, int rrnAtual, int alvo) {
-    fprintf(stderr, "removerRec: rrnAtual=%d alvo=%d\n", rrnAtual, alvo);
     if (rrnAtual == NULO_RRN) return REM_NAO_ENCONTRADO;
 
     Pagina pagina = lerNo(fp, rrnAtual);

@@ -729,6 +729,9 @@ void funcionalidade10() {
         free(validacoes);
     }
 
+    /* Recalcular nroEstacoes e nroParesEstacao no cabeçalho dos dados */
+    atualizarCabecalho(fpDados, &cabDados);
+
     /* Marcar os arquivos como consistentes */
     cabDados.status = STATUS_CONSISTENTE;
     cabIndice.status = STATUS_CONSISTENTE;
