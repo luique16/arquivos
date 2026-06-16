@@ -534,6 +534,11 @@ void funcionalidade9() {
 
     /* Abre o arquivo de índice */
     FILE *fpIndice = fopen(nomeArquivoIndice, "r+b");
+    if (fpIndice == NULL) {
+        fclose(fpDados);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
 
     /* Lê cabeçalho do arquivo de índice */
     CabecalhoArvB cabIndice;
