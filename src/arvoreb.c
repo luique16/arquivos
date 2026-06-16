@@ -334,22 +334,17 @@ void redistribuir(FILE *fp, Pagina *pai, int indiceFilhoEsq) {
 }
 
 void removerLogicPagina(FILE *fp, CabecalhoArvB *cab, int rrn) {
-    int removido = REGISTRO_REMOVIDO;
+    char removido = REGISTRO_REMOVIDO;
 
-    //atualizar os valores relacionados à pilha dos removidos
     int proximo = cab->topo;
     cab->topo = rrn;
 
-    //atualizar o início da página no arquivo, não compensa usar escreverNo para mudar apenas os campos iniciais
-    long offsetInicio = rrnParaOffset(rrn);
+    long offsetInicio = calcularOffsetNo(rrn);
     fseek(fp, offsetInicio, SEEK_SET);
     fwrite(&removido, sizeof(char), 1, fp);
     fwrite(&proximo, sizeof(int), 1, fp);
 
-    //atualizar o nroNos no cabeçalho
     cab->nroNos--;
-
-    return;
 }
 
 /* Recebe o índice do filho à esquerda, que será concatenado com o da sua direita (o da direita será destruído) */
@@ -394,45 +389,41 @@ void concatenarFilhos(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilho
 }
 
 int tratarUnderflow(FILE *fp, CabecalhoArvB *cab, Pagina *pai, int indiceFilhoComUnderflow) {
-    fprintf(stderr, "tratarUnderflow: indiceFilho=%d pai->nroChaves=%d\n", indiceFilhoComUnderflow, pai->nroChaves);
-    /* Tentar redistribuir pelo irmão da esquerda */
-    if (indiceFilhoComUnderflow > 0) {
-        /* Ler só o nroChaves do irmão da esquerda(para não precisar carregar a página inteira ainda) */
-        int nroChavesIrmEsq;
-        fseek(fp, rrnParaOffset(pai->descendentes[indiceFilhoComUnderflow-1]) /* início da página */ + 1*sizeof(char) /* removido */ + 2*sizeof(int) /* proximo, tipoNo */, SEEK_SET);
-        fread(&nroChavesIrmEsq, sizeof(int), 1, fp);
-
-        /* Se tem uma chave sobrando */
-        if (nroChavesIrmEsq >= MINIMO_CHAVES + 1) {
-            redistribuir(fp, pai, indiceFilhoComUnderflow - 1);
-            return REM_OK;
-        }
-    }
-
     /* Tentar redistribuir pelo irmão da direita */
     if (indiceFilhoComUnderflow < pai->nroChaves) {
-        /* Ler só o nroChaves do irmão da esquerda(para não precisar carregar a página inteira ainda) */
+        int rrnIrmaoDir = pai->descendentes[indiceFilhoComUnderflow + 1];
         int nroChavesIrmDir;
-        fseek(fp, rrnParaOffset(pai->descendentes[indiceFilhoComUnderflow]) /* início da página */ + 1*sizeof(char) /* removido */ + 2*sizeof(int) /* proximo, tipoNo */, SEEK_SET);
+        long offsetIrmDir = calcularOffsetNo(rrnIrmaoDir) + 1*sizeof(char) + 2*sizeof(int);
+        fseek(fp, offsetIrmDir, SEEK_SET);
         fread(&nroChavesIrmDir, sizeof(int), 1, fp);
 
-        /* Se tem uma chave sobrando */
         if (nroChavesIrmDir >= MINIMO_CHAVES + 1) {
             redistribuir(fp, pai, indiceFilhoComUnderflow);
             return REM_OK;
         }
     }
 
+    /* Tentar redistribuir pelo irmão da esquerda */
+    if (indiceFilhoComUnderflow > 0) {
+        int rrnIrmaoEsq = pai->descendentes[indiceFilhoComUnderflow - 1];
+        int nroChavesIrmEsq;
+        long offsetIrmEsq = calcularOffsetNo(rrnIrmaoEsq) + 1*sizeof(char) + 2*sizeof(int);
+        fseek(fp, offsetIrmEsq, SEEK_SET);
+        fread(&nroChavesIrmEsq, sizeof(int), 1, fp);
+
+        if (nroChavesIrmEsq >= MINIMO_CHAVES + 1) {
+            redistribuir(fp, pai, indiceFilhoComUnderflow - 1);
+            return REM_OK;
+        }
+    }
+
     /* Não redistribuiu: aplica concatenação */
     if (indiceFilhoComUnderflow > 0) {
-        /* concatena com o irmão da esquerda */
         concatenarFilhos(fp, cab, pai, indiceFilhoComUnderflow - 1);
     } else {
-        /* concatena com o irmão da direita */
         concatenarFilhos(fp, cab, pai, indiceFilhoComUnderflow);
     }
 
-    /* checar se o pai perdeu uma chave na concatenação e subir na recursão */
     return checkUnderflow(pai) ? REM_UNDERFLOW : REM_OK;
 }
 
@@ -506,15 +497,22 @@ int removerRec(FILE *fp, CabecalhoArvB *cab, int rrnAtual, int alvo) {
 int removerDaArvore(FILE *fp, CabecalhoArvB *cab, int alvo) {
     int resultado = removerRec(fp, cab, cab->noRaiz, alvo);
 
-    /* Caso especial: raiz ficou vazia após fusão */
     if (resultado == REM_UNDERFLOW) {
         Pagina raiz = lerNo(fp, cab->noRaiz);
-        int rrnRaizAntiga = cab->noRaiz;
-        if (raiz.nroChaves == 0 && raiz.tipoNo != NO_FOLHA) {
-            cab->noRaiz = raiz.descendentes[0];
+        if (raiz.nroChaves == 0) {
+            int rrnRaizAntiga = cab->noRaiz;
+            if (raiz.descendentes[0] != NULO_RRN) {
+                cab->noRaiz = raiz.descendentes[0];
+                Pagina novaRaiz = lerNo(fp, cab->noRaiz);
+                if (novaRaiz.descendentes[0] == NULO_RRN)
+                    novaRaiz.tipoNo = NO_FOLHA;
+                else
+                    novaRaiz.tipoNo = NO_RAIZ;
+                escreverNo(fp, cab->noRaiz, novaRaiz);
+            }
+            if (rrnRaizAntiga != NULO_RRN)
+                removerLogicPagina(fp, cab, rrnRaizAntiga);
         }
-        if (rrnRaizAntiga != NULO_RRN)
-            removerLogicPagina(fp, cab, rrnRaizAntiga);
     }
 
     return (resultado != REM_NAO_ENCONTRADO);
