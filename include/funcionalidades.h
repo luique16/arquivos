@@ -105,4 +105,12 @@ void funcionalidade11();
  * o registro correspondente no arquivo interno pelo campo codEstacao.
  */
 void funcionalidade12();
+
+/**
+ * @brief [13] ORDER BY — Ordena os registros ativos em um novo arquivo.
+ *
+ * Le todos os registros ativos para memoria, ordena por codEstacao
+ * ou codProxEstacao e grava o resultado em arquivo binario de saida.
+ */
+void funcionalidade13();
 #endif
