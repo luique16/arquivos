@@ -362,3 +362,12 @@ void lerRegistroStdin(RegistroDados *reg) {
 
     free(leitura);
 }
+
+void imprimirResultadoJuncao(RegistroDados *regA, RegistroDados *regB) {
+    printf("%d %s %s %d %s\n",
+           regA->codEstacao,
+           regA->nomeEstacao,
+           regA->nomeLinha,
+           regA->codProxEstacao,
+           regB->nomeEstacao);
+}

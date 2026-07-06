@@ -90,4 +90,11 @@ void atualizarRegistro(FILE *bin, CabecalhoArquivo *, RegistroDados *reg, int rr
 
 void lerRegistroStdin(RegistroDados *reg);
 
+/**
+ * @brief Imprime uma linha do resultado da junção.
+ *
+ * Formato: codEstacao_A nomeEstacao_A nomeLinha_A codProxEstacao_A nomeEstacao_B
+ */
+void imprimirResultadoJuncao(RegistroDados *regA, RegistroDados *regB);
+
 #endif
