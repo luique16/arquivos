@@ -97,4 +97,12 @@ void funcionalidade10();
  * os pares que satisfazem a condição codProxEstacao = codEstacao.
  */
 void funcionalidade11();
+
+/**
+ * @brief [12] SINGLE LOOP JOIN — Junção usando índice árvore-B.
+ *
+ * Percorre o arquivo externo e usa o indice arvore-B para localizar
+ * o registro correspondente no arquivo interno pelo campo codEstacao.
+ */
+void funcionalidade12();
 #endif
