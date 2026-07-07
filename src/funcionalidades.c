@@ -12,6 +12,7 @@
 #include "../include/arvoreb.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 static int compararPorCodEstacao13(const void *a, const void *b) {
     const RegistroDados *ra = (const RegistroDados *)a;
@@ -1062,4 +1063,88 @@ void funcionalidade13() {
 
     free(vetor);
     BinarioNaTela(nomeArquivoSaida);
+}
+
+void funcionalidade14() {
+    /* Lê os dois arquivos e os dois campos da condição de junção */
+    char nomeArquivo1[256];
+    char nomeCampo1[64];
+    char nomeArquivo2[256];
+    char nomeCampo2[64];
+    scanf("%s %s %s %s", nomeArquivo1, nomeCampo1, nomeArquivo2, nomeCampo2);
+    (void)nomeCampo1;
+    (void)nomeCampo2;
+
+    /* Abre e valida o primeiro arquivo (A) */
+    FILE *fpA = fopen(nomeArquivo1, "rb");
+    if (fpA == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    CabecalhoArquivo cabA;
+    lerCabecalho(fpA, &cabA);
+    if (cabA.status == STATUS_INCONSISTENTE) {
+        fclose(fpA);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    /* Trazer os registros do arquivo A para a memória em um vetor */
+    Registro registrosA[MAX_REG];
+    for (int rrn = 0; rrn < MAX_REG; rrn++) {
+        /* checar se o registro atual foi removido */
+        char removido;
+        long offset = rrnParaOffset(rrn);
+        fseek(fpDados, offset, SEEK_SET);
+        fread(&removido, sizeof(char), 1, fpDados);
+        if (removido == REGISTRO_REMOVIDO) continue;
+
+        /* adicionar o registro no vetor */
+        fseek(fpDados, offset, SEEK_SET);
+        lerRegistro(fpDados, &registrosA[rrn], rrn);
+    }
+
+    /* Ordenar usando qsort() */
+
+    /* Abre e valida o segundo arquivo (B) */
+    FILE *fpB = fopen(nomeArquivo2, "rb");
+    if (fpB == NULL) {
+        fclose(fpA);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    CabecalhoArquivo cabB;
+    lerCabecalho(fpB, &cabB);
+    if (cabB.status == STATUS_INCONSISTENTE) {
+        fclose(fpA);
+        fclose(fpB);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    /* Trazer os registros do arquivo A para a memória em um vetor */
+    Registro registrosB[MAX_REG];
+    for (int rrn = 0; rrn < MAX_REG; rrn++) {
+        /* checar se o registro atual foi removido */
+        char removido;
+        long offset = rrnParaOffset(rrn);
+        fseek(fpDados, offset, SEEK_SET);
+        fread(&removido, sizeof(char), 1, fpDados);
+        if (removido == REGISTRO_REMOVIDO) continue;
+
+        /* adicionar o registro no vetor */
+        fseek(fpDados, offset, SEEK_SET);
+        lerRegistro(fpDados, &registrosB[rrn], rrn);
+    }
+
+    /* Ordenar usando qsort() */
+
+    /* Intercalação */
+    for (int i = 0; i < MAX_REG; i++) {
+        for (int j = 0; j < MAX_REG; j++) {
+            /* checar se os campos de junção batem */
+        }
+    }
 }
