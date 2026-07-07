@@ -626,6 +626,7 @@ void funcionalidade9() {
 
     /* Finaliza arquivo de dados */
     atualizarCabecalho(fpDados, &cabDados);
+    cabDados.status = STATUS_CONSISTENTE;   /* Marcando explicitamente o arquivo de dados como consistente */
     escreverCabecalho(fpDados, &cabDados);
     fecharArquivoBin(fpDados);
 
@@ -760,14 +761,14 @@ void funcionalidade10() {
         free(validacoes);
     }
 
-    /* Recalcular nroEstacoes e nroParesEstacao no cabeçalho dos dados */
+    /* Recalcular nroEstacoes e nroParesEstacao no cabeçalho dos dados (EM MEMÓRIA) */
     atualizarCabecalho(fpDados, &cabDados);
 
     /* Marcar os arquivos como consistentes */
     cabDados.status = STATUS_CONSISTENTE;
     cabIndice.status = STATUS_CONSISTENTE;
 
-    /* Atualizar os cabeçalhos */
+    /* Atualizar os cabeçalhos no disco */
     escreverCabecalho(fpDados, &cabDados);
     escreverCabecalhoArvB(fpIndice, cabIndice);
 
