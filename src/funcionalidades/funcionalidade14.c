@@ -80,7 +80,7 @@ void funcionalidade14() {
         return;
     }
 
-    /* Trazer os registros do arquivo A para a memória em um vetor */
+    /* Trazer os registros do arquivo B para a memória em um vetor */
     RegistroDados *registrosB = malloc(cabB.proxRRN * sizeof(RegistroDados));
     int qtdB = carregarRegistros(fpB, cabB.proxRRN, registrosB);
 
@@ -114,12 +114,7 @@ void funcionalidade14() {
         }
 
         if (valA == valB) {
-            printf("%d %s %s %d %s\n",
-                registrosA[i].codEstacao,
-                registrosA[i].nomeEstacao,
-                registrosA[i].nomeLinha,
-                registrosA[i].codProxEstacao,
-                registrosB[j].nomeEstacao);
+            imprimirResultadoJuncao(&registrosA[i], &registrosB[j]);
             encontrou = 1;
             i++;
             j++;  /* ambos avançam, pois B não tem coEstacao duplicados */
