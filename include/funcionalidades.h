@@ -113,4 +113,13 @@ void funcionalidade12();
  * ou codProxEstacao e grava o resultado em arquivo binario de saida.
  */
 void funcionalidade13();
+
+/**
+ * @brief [14] SORT MERGE JOIN - Junção por ordenação e intercalação dos registros.
+ * 
+ * Carrega os registros de ambos os arquivos na memória e os ordena.
+ * Depois, faz a junção de A e B por intercalação, imprimindo os registros correspondentes.
+ */
+void funcionalidade14();
+
 #endif

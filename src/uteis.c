@@ -371,3 +371,14 @@ void imprimirResultadoJuncao(RegistroDados *regA, RegistroDados *regB) {
            regA->codProxEstacao,
            regB->nomeEstacao);
 }
+
+int compararRegistros(void *a, void *b, char nomeCampo[]) {
+    if (nomeCampo == "codProxEstacao") {
+        return ((RegistroDados *)a)->codProxEstacao - ((RegistroDados *)b)->codProxEstacao;
+    }
+    if (nomeCampo == "codEstacao") {
+        return ((RegistroDados *)a)->codEstacao - ((RegistroDados *)b)->codEstacao;
+    }
+
+    return 0; /* Se a condição de comparação não for nenhuma dessas duas, não tratamos e assumimos igualdade */
+}
