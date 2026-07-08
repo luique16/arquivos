@@ -372,13 +372,28 @@ void imprimirResultadoJuncao(RegistroDados *regA, RegistroDados *regB) {
            regB->nomeEstacao);
 }
 
-int compararRegistros(void *a, void *b, char nomeCampo[]) {
-    if (nomeCampo == "codProxEstacao") {
-        return ((RegistroDados *)a)->codProxEstacao - ((RegistroDados *)b)->codProxEstacao;
-    }
-    if (nomeCampo == "codEstacao") {
-        return ((RegistroDados *)a)->codEstacao - ((RegistroDados *)b)->codEstacao;
+int compararPorCodEstacao(const void *a, const void *b) {
+    const RegistroDados *ra = (const RegistroDados *)a;
+    const RegistroDados *rb = (const RegistroDados *)b;
+    return ra->codEstacao - rb->codEstacao;
+}
+
+int compararPorCodProxEstacao(const void *a, const void *b) {
+    const RegistroDados *ra = (const RegistroDados *)a;
+    const RegistroDados *rb = (const RegistroDados *)b;
+
+    /* Quando ambos forem nulos, sao equivalentes */
+    if (ra->codProxEstacao == INTEIRO_NULO && rb->codProxEstacao == INTEIRO_NULO) {
+        return 0;
     }
 
-    return 0; /* Se a condição de comparação não for nenhuma dessas duas, não tratamos e assumimos igualdade */
+    /* Nulo vai para o fim */
+    if (ra->codProxEstacao == INTEIRO_NULO) {
+        return 1;
+    }
+    if (rb->codProxEstacao == INTEIRO_NULO) {
+        return -1;
+    }
+
+    return ra->codProxEstacao - rb->codProxEstacao;
 }

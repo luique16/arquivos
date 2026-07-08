@@ -7,6 +7,7 @@
 #define UTEIS_H
 
 #include "definicoes.h"
+#include "arvoreb.h"
 #include <stdbool.h>
 
 /**
@@ -96,5 +97,11 @@ void lerRegistroStdin(RegistroDados *reg);
  * Formato: codEstacao_A nomeEstacao_A nomeLinha_A codProxEstacao_A nomeEstacao_B
  */
 void imprimirResultadoJuncao(RegistroDados *regA, RegistroDados *regB);
+
+/**
+ * @brief Funções de comparação para serem usadas na ordenação
+ */
+int compararPorCodEstacao(const void *a, const void *b);
+int compararPorCodProxEstacao(const void *a, const void *b);
 
 #endif
