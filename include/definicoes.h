@@ -16,7 +16,6 @@
 #define LIXO                 '$'
 #define INTEIRO_NULO         -1
 #define TAMANHO_MAX_NOME     50 /* Nomes garantidamente menores que 50 */
-#define MAX_REG              300 /* Quantidade máxima de registros no arquivo de dados */
 
 /* Status do arquivo */
 #define STATUS_INCONSISTENTE '0'
