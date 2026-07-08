@@ -101,7 +101,7 @@ void funcionalidade13() {
     }
 
     /* Recalcula valores do cabecalho e finaliza arquivo */
-    atualizarCabecalho(fpSaida, &cabSaida);
+    atualizarCabecalho(fpSaida, &cabSaida); /* Atualiza somente na memória */
     escreverCabecalho(fpSaida, &cabSaida);
     fecharArquivoBin(fpSaida);
 
